@@ -36,4 +36,5 @@ public:
     int16_t CalcError(void);
     bool CheckIntersection(void);
     bool checkOffLine(void);
+    bool CheckEdge(void);
 };
