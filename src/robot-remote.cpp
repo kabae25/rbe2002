@@ -116,10 +116,11 @@ void Robot::HandleKeyCode(int16_t keyCode)
                 EnterNavTurning(2);
                 break;
             case NUM_1:
-                //arm.raise();
+
+                arm.raiseArm();
                 break;
             case NUM_2:
-                //arm.lower();
+                arm.lowerArm();
                 break;
         }
     }

@@ -2,7 +2,7 @@
 #include <IRdecoder.h>
 #include <Esp32.h>
 #include <Vision.h>
-#include "subsys/arm.h"
+#include <subsys/arm.h>
 
 void Robot::InitializeRobot(void)
 {
@@ -32,6 +32,8 @@ void Robot::InitializeRobot(void)
     vision.init();
 
     /* servo init */
+    arm.enterInit();
+
     imuSubTimer.start(90);
 
     //loadCellHX1.Init();
@@ -191,6 +193,7 @@ void Robot::HandleNavTurning(void) {
     }
     else if (igoal != icurr || jgoal != jcurr) {
         if(edgeDetected) {
+            arm.lowerArm();
             // TODO: DEPLOY ARM
             // TODO: GO BACK DOWN RAMP
         } else {
@@ -341,7 +344,9 @@ void Robot::EnterManSearching(void) {
 
 void Robot::EnterManApproaching(void) {
     chassis.Stop();
+
     arm.lowerArm(false);
+
     timestamp = (millis() + remembrance);
     manipulatingState = MANIPULATING_APPROACHING;
     Serial.println("Entering MANIPULATING: Approaching");
@@ -351,6 +356,7 @@ void Robot::EnterManApproaching(void) {
 
 void Robot::EnterManLifting(void) {
     //arm.raiseArm();
+
     manipulatingState = MANIPULATING_LIFTING;
     Serial.println("Entering MANIPULATING: Lifting");
 
