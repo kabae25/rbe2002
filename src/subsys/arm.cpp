@@ -22,9 +22,18 @@ void Arm::update()
             HandleLowering(); break;
         case RAISING:
             HandleRaising(); break;
-        case 
-        
+        case WEIGHING:
+            HandleWeighing(); break;
     }
+}
+
+bool Arm::checkArmRaised()
+{
+    if (servo.checkAtTarget() && raiseNeedsToBeChecked) {
+        raiseNeedsToBeChecked = false;
+        return true;
+    }
+    else return false;
 }
 
 void Arm::EnterIdle()

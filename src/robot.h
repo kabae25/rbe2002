@@ -26,11 +26,6 @@ protected:
      * robotState is used to track the current task of the robot. You will add new states as 
      * the term progresses.
      */
-    enum ROBOT_STATE {
-        ROBOT_IDLE, 
-        ROBOT_NAVIGATING,
-        ROBOT_MANIPULATING,
-    };
 
     /** 
      * This statemachine controls the actions of the robot while it is in the NAVIGATING state. 
@@ -43,10 +38,8 @@ protected:
         NAVIGATING_PULLUP,
     };
 
-    /**
-     * This statemachine controls the actions of the robot while it is in the MANIPULATING state
-     * This includes locating and driving to april tags, lifting and weighing trash
-     */
+
+// PLEASE REMOVE - REDUNDANT
     enum MANIPULATING_STATE {
         MANIPULATING_IDLE,
         MANIPULATING_SEARCHING,
@@ -54,10 +47,6 @@ protected:
         MANIPULATING_LIFTING,
         MANIPULATING_WEIGHING
     };
-
-
-    // set default robot state
-    ROBOT_STATE robotState = ROBOT_IDLE;
 
     // set default navigating state
     NAVIGATING_STATE navigatingState = NAVIGATING_IDLE;
@@ -152,16 +141,47 @@ public:
         Serial.print("Changing Control Mode to: ");
         Serial.println(newMode);
     }
+private:
+        enum ROBOT_STATE {
+            INIT, // setup stuff
+            IDLE, // wait for a goal bin from MQTT
+            DRIVING_BIN, // Drive to the bin (using map)
+            COLLECTING, // approach and collect the bin
+            WEIGHING, // Weigh the bin
+            DRIVING_RAMP, // drive to the ramp
+            DRIVING_DUMP, // drive up the ramp
+            DUMPING, // dump the bin
+            RETURNING // return to the start position
+        };
+        ROBOT_STATE robotState = IDLE;
+public:
+    void EnterInit();
+    void EnterIdle();
+    void EnterDrivingBin();
+    void EnterCollecting();
+    void EnterWeighing();
+    void EnterDrivingRamp();
+    void EnterDrivingDump();
+    void EnterDumping();
+    void EnterReturning();
+
+private:
+    void HandleIdle();
+    void HandleDrivingBin();
+    void HandleCollecting();
+    void HandleWeighing();
+    void HandleDrivingRamp();
+    void HandleDrivingDump();
+    void HandleDumping();
+    void HandleReturning();
 
 protected:
-
     /* For managing IR remote key presses*/
     void HandleKeyCode(int16_t keyCode);
 
-    /* State changes */    
-    void EnterIdleState(void);
-
-    /* Navigating State machine Methods*/
+    /**
+     * KEEP THESE :) MIGHT BE USEFUL
+     */
     void EnterNavTurning(int cardinal);
     void EnterNavLining(int speed);
     void EnterNavPullup(int time);
@@ -177,6 +197,8 @@ protected:
     void HelperLineFollowingUpdate(void);
 
     /* Manipulating state machine methods */
+
+// PLEASE REMOVE - REDUNDANT & BLOAT 
     void EnterManIdle(void);
     void EnterManSearching(void);
     void EnterManApproaching(void);
@@ -190,7 +212,7 @@ protected:
     void HandleManWeighing(void);
 
     /* Manipulating state helper methods */
-    uint8_t HelperCheckApproachComplete(int headingTolerance, int distanceTolerance);
+    bool HelperCheckApproachComplete(int headingTolerance, int distanceTolerance);
 
     /* Mode changes */
     void EnterTeleopMode(void);
@@ -209,9 +231,5 @@ protected:
     float biasDelta = 0;
     EventTimer imuSubTimer;
     float prevZBias =0 ;
-    
-
-    /* For commanding the lifter servo */
-    void SetLifter(uint16_t position);
 };
  
