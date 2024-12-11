@@ -15,6 +15,16 @@ void Arm::enterInit()
 void Arm::update()
 {
     servo.update();
+    switch (state) {
+        case IDLE:
+            HandleIdle(); break;
+        case LOWERING:
+            HandleLowering(); break;
+        case RAISING:
+            HandleRaising(); break;
+        case 
+        
+    }
 }
 
 void Arm::EnterIdle()
