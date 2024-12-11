@@ -3,10 +3,13 @@
 #include <Arduino.h>
 
 // #define LEFT_LINE_SENSOR3 A4
-#define LEFT_LINE_SENSOR A0
+#define LEFT_INNER_SENSOR A6
+#define LEFT_OUTER_SENSOR A11
 // #define LEFT_LINE_SENSOR1 A11
 
-#define RIGHT_LINE_SENSOR A4
+#define RIGHT_INNER_SENSOR A4
+#define RIGHT_OUTER_SENSOR A0
+
 // #define RIGHT_LINE_SENSOR2 A3
 // #define RIGHT_LINE_SENSOR3 A2
 
@@ -15,9 +18,6 @@
 class LineSensor
 {
 protected:
-    uint8_t leftSensorPin = LEFT_LINE_SENSOR;
-    uint8_t rightSensorPin = RIGHT_LINE_SENSOR;
-
     bool prevOnIntersection = false;
 
 public:

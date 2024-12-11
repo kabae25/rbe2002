@@ -58,11 +58,11 @@ void Robot::HandleKeyCode(int16_t keyCode)
                 keyString = "";
                 break;
             case REWIND: // enter the nav state when the rewind button is pressed
-                //robotState = ROBOT_NAVIGATING;
+                robotState = DRIVING_BIN;
                 atPlatform = false;
                 // EnterNavIdle();
-                EnterNavLining(baseSpeed);
-                                //EnterNavTurning(HelperNavCalculateDirection());
+                //EnterNavLining(baseSpeed);
+                EnterNavTurning(HelperNavCalculateDirection());
                 baseSpeed = keyString.toInt();
                 keyString = "";
                 break;

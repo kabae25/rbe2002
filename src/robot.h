@@ -81,7 +81,11 @@ protected:
     LSM6::vector<float> eulerAngles;
     LSM6::vector<float> gyroBias;
 
-    /* baseSpeed is used to drive at a given speed while, say, line following.*/
+    bool looking = false;
+
+    /**
+     * Navigating Statemachine
+     */
     float baseSpeed = 0;
 
     float numTurns = 0; // Number of 90 degree turns to perform
@@ -118,7 +122,7 @@ protected:
     unsigned int mass = 0;
 
     bool edgeDetected = false;
-
+    bool completedLeg = false;
 
 public:
     Robot(void) {keyString.reserve(8);} //reserve some memory to avoid reallocation
@@ -232,5 +236,7 @@ protected:
     float biasDelta = 0;
     EventTimer imuSubTimer;
     float prevZBias =0 ;
+
+    float prevLineError;
 };
  

@@ -22,8 +22,6 @@ void Robot::InitializeRobot(void)
 
     arm.enterInit();
 
-    pinMode(13, OUTPUT);
-
     lineSensor.Initialize();
 
     esp32.init();
@@ -36,7 +34,10 @@ void Robot::InitializeRobot(void)
 
     imuSubTimer.start(90);
 
-    //loadCellHX1.Init();
+    EnterNavIdle();
+    
+    baseSpeed = 15;
+        //loadCellHX1.Init();
 }
 
 /**
@@ -47,7 +48,6 @@ void Robot::InitializeRobot(void)
 void Robot::HandleOrientationUpdate(void)
 {
     if (!stabilized) {
-
         float biasX = 0.96 * imu.gyroBias.x + (1-0.96) * imu.g.x;
         float biasY = 0.95 * imu.gyroBias.y + (1-0.95) * imu.g.y;
         float biasZ = 0.98 * imu.gyroBias.z + (1-0.98) * imu.g.z;
@@ -57,7 +57,7 @@ void Robot::HandleOrientationUpdate(void)
             //plotVariable("Bias Filter", abs(biasDelta));
             prevZBias = imu.gyroBias.z;
 
-            if (abs(biasDelta) < 0.25) { // once imu delta has settled,
+            if (abs(biasDelta) < 2) { // was 0.25 // once imu delta has settled,
                 imuSubTimer.cancel();
                 stabilized = true;
             }
@@ -66,6 +66,8 @@ void Robot::HandleOrientationUpdate(void)
         imu.gyroBias.x = biasX;
         imu.gyroBias.y = biasY;
         imu.gyroBias.z = biasZ;
+
+        Serial.println("Not Ready");
     }
     else {
         // once the bias is tolerable, enable the complimentary filter and send the imu angles
@@ -179,9 +181,10 @@ void Robot::EnterNavIdle(void) {
     Serial.println("Entering NAVIGATING: IDLE");
 }
 
-// Nav: handle TURNING state
+// This state can decide what direction to turn based on some destination and current coordinates on the manhatten grid
 void Robot::HandleNavTurning(void) {
-    if (currDirection != goalDirection) {
+   if(!looking) {
+     if (currDirection != goalDirection) {
         if (numTurns > 0) {
             if (numTurns > 2) {chassis.SetTwist(0, -2);} 
             else {chassis.SetTwist(0, 2);}
@@ -208,12 +211,11 @@ void Robot::HandleNavTurning(void) {
         navLeg++;
         EnterNavIdle();
     }
+   }
 }
 
 // Nav: handle LINING state
 void Robot::HandleNavLining(void) {
-
-
     if ((!lineSensor.CheckIntersection())) { // || ((prevRamping == false) && (ramping == true))
         // line following is handled sychronously in the robotLoop method
     }
@@ -256,32 +258,19 @@ void Robot::HandleNavPullup(void) {
 // Nav: handle IDLE state
 void Robot::HandleNavIdle(void) {
     // For just going up the ramp and stopping
-    switch(navLeg) {
-        case 0: // set the goal i and j, then start navigating to the node
-            igoal = 0;
-            jgoal = 1;
-            EnterNavTurning(HelperNavCalculateDirection());
-            break;
-        case 1:
-            igoal = 1;
-            jgoal = 1;
-            EnterNavTurning(HelperNavCalculateDirection());
-            break;
-        case 2:
-            // completed the nav so do nothing...
-            // otherwise probably make this change the robot state
-            break;
+    if (!andBack) {
+        //igoal = -2;
+        //jgoal = 0;
     }
-    /*if (andBack) { // swap variables if the andBack flag was raised
-        int tempi = igoal;
-        int tempj = jgoal;
-        igoal = istarting;
-        jgoal = jstarting;
-        istarting = tempi;
-        jstarting = tempj;
+    
+    if (andBack) { // swap variables if the andBack flag was raised
+        istarting = igoal;
+        jstarting = jgoal;
+        igoal = 0;
+        jgoal = 0;
         EnterNavTurning(HelperNavCalculateDirection());
     }
-    */
+    
     // possible do someting here...
 }
 
@@ -361,7 +350,7 @@ void Robot::EnterManApproaching(void) {
 // PLEASE REMOVE - REDUNDANT & BLOAT 
 
 void Robot::EnterManLifting(void) {
-    //arm.raiseArm();
+    arm.raiseArm(false);
 
     manipulatingState = MANIPULATING_LIFTING;
     Serial.println("Entering MANIPULATING: Lifting");
@@ -383,6 +372,7 @@ void Robot::HandleManIdle(void) {
 // PLEASE REMOVE - REDUNDANT & BLOAT 
 
 void Robot::HandleManSearching(void) {
+    looking = true;
     if (vision.FindAprilTags(tag)) {
         EnterManApproaching();
     }
@@ -420,7 +410,10 @@ void Robot::HandleManApproaching(void) {
 
     chassis.SetTwist(forward_effort, -rot_effort);
 
+    Serial.println(tag.z);
+
     if (HelperCheckApproachComplete(3.5, -tag.z)) {
+        looking = false;
         EnterManLifting();
     }
 }
@@ -482,7 +475,17 @@ void Robot::RobotLoop(void)
         // add synchronous, pre-motor-update actions here
         if(navigatingState == NAVIGATING_LINING)
         {
-            HelperLineFollowingUpdate();
+            float followKp = 0.0055;
+            float followKd = 0.0007;
+
+            float lineError = lineSensor.CalcError();
+            float lineErrorDerivative = lineError - prevLineError;
+
+            float turnEffort = followKp * lineError + followKd * lineErrorDerivative;
+
+            chassis.SetTwist(baseSpeed, -turnEffort);
+            prevLineError = lineError;    
+            //HelperLineFollowingUpdate();
         }
 
         chassis.UpdateMotors();
@@ -549,12 +552,12 @@ void Robot::RobotLoop(void)
 
     arm.update();
 
-    if (lineSensor.CheckEdge()) {
-        Serial.println("Edge detected");
-        chassis.Stop();
-        edgeDetected = true;
-        EnterNavTurning(2);
-    }
+    // if (lineSensor.CheckEdge()) {
+    //     Serial.println("Edge detected");
+    //     chassis.Stop();
+    //     edgeDetected = true;
+    //     EnterNavTurning(2);
+    // }
 
     //int32_t reading = 0;
     //if (loadCellHX1.GetReading(reading)) {
