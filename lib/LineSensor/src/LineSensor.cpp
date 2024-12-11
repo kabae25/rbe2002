@@ -1,8 +1,8 @@
 #include "LineSensor.h"
 
 #define BRIGHT_THRESHOLD 1200;
-#define EDGE_THRESHOLD 1000;
-#define INTERSECTION_THRESHOLD 2000;
+#define EDGE_THRESHOLD 900;
+#define INTERSECTION_THRESHOLD 800;
 
 // initialize the linesensors
 void LineSensor::Initialize(void)
