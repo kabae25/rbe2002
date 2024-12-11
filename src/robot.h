@@ -154,6 +154,7 @@ public:
     }
 
 protected:
+
     /* For managing IR remote key presses*/
     void HandleKeyCode(int16_t keyCode);
 

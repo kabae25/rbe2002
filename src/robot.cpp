@@ -50,7 +50,7 @@ void Robot::EnterIdleState(void)
  */
 void Robot::HandleOrientationUpdate(void)
 {
-        if (!stabilized) {
+    if (!stabilized) {
 
         float biasX = 0.96 * imu.gyroBias.x + (1-0.96) * imu.g.x;
         float biasY = 0.95 * imu.gyroBias.y + (1-0.95) * imu.g.y;
