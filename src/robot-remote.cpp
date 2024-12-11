@@ -72,16 +72,26 @@ void Robot::HandleKeyCode(int16_t keyCode)
                 EnterManSearching();
                 break;
             case NUM_1:
+                arm.raiseArm(false);  
+                break;
             case NUM_2:
+                arm.lowerArm(false);
+                break;
             case NUM_3:
                 keyString += (char)(keyCode + 33);
                 break;
             case NUM_4:
+                chassis.SetTwist(10, 0);
+                break;
             case NUM_5:
+                chassis.SetTwist(-10, 0);
+                break;
             case NUM_6:
                 keyString += (char)(keyCode + 32);
                 break;
             case NUM_7:
+                chassis.Stop();
+                break;
             case NUM_8:
             case NUM_9:
                 keyString += (char)(keyCode + 31);
