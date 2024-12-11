@@ -5,7 +5,7 @@ Servo32U4Pin5 servo;
 #define AMP_PIN 12
 #define RAISED_PWM 570
 #define LOWERED_PWM 1700
-#define LOAD_CELL_PIN 10
+#define LOAD_CELL_PIN 10 //TODO CHANGE TO ACTUAL ANALOG PIN
 
 void Arm::enterInit()
 {
@@ -56,6 +56,7 @@ void Arm::HandleIdle()
     }
 }
 
+// Returns TRUE if arm is busy weighing
 bool Arm::checkWeighing()
 {
     return isWeighing;
@@ -90,23 +91,28 @@ void Arm::HandleLowering()
 void Arm::EnterWeighing()
 {
     isWeighing = true;
-    weightTimer.start(20);
+    weightTimer.start(50);
+    state = WEIGHING;
+    weightSum = 0;
+    weight_count = 0;
+    Serial.println("Entering Weighing");
+}
+
+float Arm::calculateWeight(float weightADC)
+{
+    return ((weightADC - 324) * 3);
 }
 
 void Arm::HandleWeighing()
 {
-     if (weightTimer.checkExpired(true)) {
-        unsigned int sample = digitalRead(LOAD_CELL_PIN);
-        mass = mass*0.8 + (1-0.8)*((sample - 310.86)/1.2548);
-        
-        if (weight_count > 50) {
-            Serial.print("Mass: ");
-            Serial.print(mass);
-            weight_count = 0;
-            isWeighing = false;
+      if (weightTimer.checkExpired(true)){
+            if (weight_count < 50){
+                weightSum += analogRead(LOAD_CELL_PIN);
+                weight_count += 1;
+                #ifdef __LOAD_CELL_DEBUG__
+                plotVariable("weight ADC", analogRead(WEIGHING_PIN));
+                plotVariable("weight (g)", calculateWeight(analogRead(WEIGHING_PIN)));
+                #endif
+            }
         }
-        else {
-            weight_count++;
-        }
-    }
 }

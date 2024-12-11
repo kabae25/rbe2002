@@ -14,6 +14,7 @@ class Arm {
         void raiseArm(bool needsToBeChecked) {raiseCmd = true; raiseNeedsToBeChecked = needsToBeChecked; }
         void lowerArm(bool needsToBeChecked) {lowerCmd = true; lowerNeedsToBeChecked = needsToBeChecked; }
         void weigh() {weighCmd = true;}
+        float calculateWeight(float weightADC);
 
     private:
         bool raiseNeedsToBeChecked = false;
@@ -46,6 +47,7 @@ class Arm {
         unsigned int weight_count = 0;
         unsigned int mass = 0;
         bool isWeighing = false;
+        float weightSum = 0;
 
         void EnterIdle();
         void HandleIdle();
