@@ -4,7 +4,7 @@
 #include <LSM6.h>
 #include <Esp32.h>
 #include <Vision.h>
-#include <arm.h>
+#include <subsys/arm.h>
 #include <ZSC31014.h>
 
 #define LOAD_CELL_PIN 10
