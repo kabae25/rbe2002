@@ -632,10 +632,15 @@ void Robot::HandleCollecting()
     chassis.SetTwist(forward_effort, -rot_effort);
 
     if (-tag.z < 3.5) {
+        chassis.Stop();
         arm.raiseArm(true);
         if (arm.checkArmRaised()) {
             EnterWeighing();
         }
+        if (!arm.checkWeighing()) {
+            EnterManIdle(); //  TODO: CHANGE
+        }
+        
     }
 }
 
@@ -651,6 +656,7 @@ void Robot::EnterWeighing()
 void Robot::HandleWeighing()
 {
     arm.weigh();
+
     // Command the romi to weigh, and wait for response
 
     // When a message is detected, notify MQTT of the bin ID, weight, and cost

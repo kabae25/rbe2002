@@ -5,6 +5,8 @@ Servo32U4Pin5 servo;
 #define AMP_PIN 12
 #define RAISED_PWM 570
 #define LOWERED_PWM 1700
+#define LOAD_CELL_PIN 10
+
 void Arm::enterInit()
 {
     servo.attach();
@@ -54,6 +56,11 @@ void Arm::HandleIdle()
     }
 }
 
+bool Arm::checkWeighing()
+{
+    return isWeighing;
+}
+
 void Arm::EnterRaising()
 {
     servo.setTargetPos(RAISED_PWM);
@@ -82,8 +89,24 @@ void Arm::HandleLowering()
 
 void Arm::EnterWeighing()
 {
+    isWeighing = true;
+    weightTimer.start(20);
 }
 
 void Arm::HandleWeighing()
 {
+     if (weightTimer.checkExpired(true)) {
+        unsigned int sample = digitalRead(LOAD_CELL_PIN);
+        mass = mass*0.8 + (1-0.8)*((sample - 310.86)/1.2548);
+        
+        if (weight_count > 50) {
+            Serial.print("Mass: ");
+            Serial.print(mass);
+            weight_count = 0;
+            isWeighing = false;
+        }
+        else {
+            weight_count++;
+        }
+    }
 }
