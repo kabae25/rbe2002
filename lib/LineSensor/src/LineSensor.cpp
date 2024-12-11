@@ -1,6 +1,7 @@
 #include "LineSensor.h"
 
 #define BRIGHT_THRESHOLD 1200;
+#define EDGE_THRESHOLD 1000;
 
 // initialize the linesensors
 void LineSensor::Initialize(void)
@@ -35,7 +36,7 @@ int16_t LineSensor::CalcError(void)
 
 float Kp = 0.0015; // 0.005 // 0.0025 for 20 cm/s 0.0018 // really bad: 0.003
 float Ki = 0.0;
-float Kd = 0.0; // 0.004
+float Kd = 0.0005; // 0.004
 
 // change PID term gains on the fly
 void LineSensor::setKp(float newKp) {Kp = newKp;}
@@ -84,4 +85,16 @@ bool LineSensor::CheckIntersection(void)
     prevOnIntersection = onIntersection;
 
     return retVal; // was retVal
+}
+
+bool LineSensor::CheckEdge(void)
+{
+    bool retVal = false;
+    bool leftEdge = analogRead(leftSensorPin1) > EDGE_THRESHOLD;
+    bool rightEdge = analogRead(rightSensorPin1) > EDGE_THRESHOLD;
+    if (leftEdge && rightEdge)
+    {
+        retVal = true;
+    }
+    return retVal;
 }

@@ -187,7 +187,12 @@ void Robot::HandleNavTurning(void) {
         }
     }
     else if (igoal != icurr || jgoal != jcurr) {
-        EnterNavLining(baseSpeed);
+        if(edgeDetected) {
+            // TODO: DEPLOY ARM
+            // TODO: GO BACK DOWN RAMP
+        } else {
+            EnterNavLining(baseSpeed);
+        }
     }
     else { // reached destination
         navLeg++;
@@ -524,6 +529,13 @@ void Robot::RobotLoop(void)
     esp32.listenUART();
 
     arm.update();
+
+    if (lineSensor.CheckEdge()) {
+        Serial.println("Edge detected");
+        chassis.Stop();
+        edgeDetected = true;
+        EnterNavTurning(2);
+    }
 
     //int32_t reading = 0;
     //if (loadCellHX1.GetReading(reading)) {

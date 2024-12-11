@@ -127,7 +127,7 @@ protected:
     unsigned int weight_count = 0;
     unsigned int mass = 0;
 
-
+    bool edgeDetected = false;
 
 
 public:
