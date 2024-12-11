@@ -345,7 +345,7 @@ void Robot::EnterManSearching(void) {
 
 void Robot::EnterManApproaching(void) {
     chassis.Stop();
-    arm.lower();
+    arm.lowerArm();
     timestamp = (millis() + remembrance);
     manipulatingState = MANIPULATING_APPROACHING;
     Serial.println("Entering MANIPULATING: Approaching");
@@ -353,7 +353,7 @@ void Robot::EnterManApproaching(void) {
 }
 
 void Robot::EnterManLifting(void) {
-    arm.raise();
+    arm.raiseArm();
     manipulatingState = MANIPULATING_LIFTING;
     Serial.println("Entering MANIPULATING: Lifting");
 
@@ -473,57 +473,52 @@ void Robot::RobotLoop(void)
         chassis.UpdateMotors();
 
         // add synchronous, post-motor-update actions here
-
     }
 
     /**
      * TITLE: Robot State handler calls
      */
     switch (robotState) {
-        case (ROBOT_IDLE):
-            // do nothing for now, maybe some time do something more important...
-            break;
-        case (ROBOT_NAVIGATING):
-            switch (navigatingState) { // handle the robot's navigating state machine
-                case (NAVIGATING_IDLE): 
-                    HandleNavIdle();
-                    break;
-                
-                case (NAVIGATING_TURNING): 
-                    HandleNavTurning();
-                    break;
-                
-                case (NAVIGATING_LINING): 
-                    HandleNavLining();
-                    break;
-                
-                case (NAVIGATING_PULLUP) :
-                    HandleNavPullup();
-                    break;
-                
-            }
-            break;
-        case (ROBOT_MANIPULATING):
-            switch (manipulatingState) {
-                case (MANIPULATING_IDLE):
-                    HandleManIdle();
-                    break;
-                case (MANIPULATING_SEARCHING):
-                    HandleManSearching();
-                    break;
-                case (MANIPULATING_APPROACHING):
-                    HandleManApproaching();
-                    break;
-                case (MANIPULATING_LIFTING):
-                    HandleManLifting();
-                    break;
-                case (MANIPULATING_WEIGHING):
-                    HandleManWeighing();
-                    break;
-            }
-            // some stuff will go here in the future;
-            break;
+        case (IDLE):
+            HandleIdle(); break;
+        case DRIVING_BIN:
+            HandleDrivingBin(); break;
+        case COLLECTING:
+            HandleCollecting(); break;
+        case WEIGHING:
+            HandleWeighing(); break;
+        case DRIVING_RAMP:
+            HandleDrivingRamp(); break;
+        case DRIVING_DUMP:
+            HandleDrivingDump(); break;
+        case DUMPING:
+            HandleDumping(); break;
+        case RETURNING:
+            HandleReturning(); break;
     }
+    switch (navigatingState) { // handle the robot's navigating state machine
+        case (NAVIGATING_IDLE): 
+            HandleNavIdle(); break;
+        case (NAVIGATING_TURNING): 
+            HandleNavTurning(); break;
+        case (NAVIGATING_LINING): 
+            HandleNavLining(); break;
+        case (NAVIGATING_PULLUP) :
+            HandleNavPullup(); break;
+        }
+    switch (manipulatingState) {
+        case (MANIPULATING_IDLE):
+            HandleManIdle(); break;
+        case (MANIPULATING_SEARCHING):
+            HandleManSearching(); break;
+        case (MANIPULATING_APPROACHING):
+            HandleManApproaching(); break;
+        case (MANIPULATING_LIFTING):
+            HandleManLifting(); break;
+        case (MANIPULATING_WEIGHING):
+            HandleManWeighing(); break;
+    }
+    
 
     /**
      * Check for an IMU update
@@ -553,3 +548,164 @@ void Robot::RobotLoop(void)
 
 }
 
+void Robot::EnterInit()
+{
+    arm.raiseArm();
+    robotState = INIT;
+}
+
+void Robot::EnterIdle()
+{
+    robotState = IDLE;
+}
+
+void Robot::HandleIdle()
+{
+    // receive a begin state from mqtt
+}
+
+void Robot::EnterDrivingBin()
+{
+    robotState = DRIVING_BIN;
+    #ifdef __STATE_DEBUG_
+        Serial.println("Entering Driving to Bin State");
+    #endif
+}
+
+void Robot::HandleDrivingBin()
+{
+    // when we reach the goal pose, 
+        // go to the collecting state
+            // put the arm down
+}
+
+void Robot::EnterCollecting()
+{
+    arm.lowerArm();
+    robotState = COLLECTING;
+    #ifdef __STATE_DEBUG_
+        Serial.println("Entering Collecting Bin State");
+    #endif
+}
+
+void Robot::HandleCollecting()
+{
+    // calculate the trust of the april tag reading
+    if (vision.FindAprilTags(tag)) {
+        trust = 1;
+        timestamp = (millis() + remembrance);
+    }
+    else {
+        trust = (timestamp - millis()) / remembrance;
+        if (trust <= 0) {
+            EnterManSearching();
+        }
+    }
+
+    plot("Trust", trust);
+    plot("tag x", tag.x);
+    plot("tag.z", -tag.z);
+
+    float rot_error = 0 - (tag.x); // center - x
+    float rot_Kp = 0.5;
+    float rot_effort = trust * (rot_Kp * rot_error);
+
+    float forward_error = 3 - (-tag.z);
+    float forward_Kp = 5;
+    float forward_effort = trust * (forward_Kp * forward_error);
+
+    chassis.SetTwist(forward_effort, -rot_effort);
+
+    if (-tag.z < 3.5) {
+        arm.raiseArm();
+        if (arm.checkRaisingComplete()) {
+            EnterWeighing();
+        }
+    }
+}
+
+void Robot::EnterWeighing()
+{
+    
+    robotState = WEIGHING;
+    #ifdef __STATE_DEBUG_
+        Serial.println("Entering Weighing State");
+    #endif
+}
+
+void Robot::HandleWeighing()
+{
+    arm.weigh();
+    // Command the romi to weigh, and wait for response
+
+    // When a message is detected, notify MQTT of the bin ID, weight, and cost
+        // send acknowledgement to the romi,
+        // request traj for the nearest waiting position by ramp ********************************************************************
+        // when traj is received, go to driving to ramp state, set chassis to moving state
+}
+
+void Robot::EnterDrivingRamp()
+{
+    robotState = DRIVING_RAMP;
+    #ifdef __STATE_DEBUG_
+        Serial.println("Entering Driving to Ramp State");
+    #endif
+}
+
+void Robot::HandleDrivingRamp()
+{
+    
+    //if ((isInBounds(ekf.x, target_x - 5, target_x + 5)) &&
+    //    (isInBounds(ekf.y, target_y - 5, target_y + 5))) 
+    //{
+    //    EnterWaiting();
+    //    msg.sendMotorSpeed(0,0);
+    //}
+}
+
+void Robot::EnterDrivingDump()
+{
+    robotState = DRIVING_DUMP;
+    #ifdef __STATE_DEBUG_
+        Serial.println("Entering Driving up Ramp to Dump State");
+    #endif
+}
+
+void Robot::HandleDrivingDump()
+{
+    //traj following to point ramp to dump
+    // once at pose, go to dumping state
+        // lower arm
+}
+
+void Robot::EnterDumping()
+{
+    
+    robotState = DUMPING;
+    #ifdef __STATE_DEBUG_
+        Serial.println("Entering dumping bin State");
+    #endif
+}
+
+void Robot::HandleDumping()
+{
+    arm.lowerArm();
+    // once arm is lowered
+    // go to returning home state
+}
+
+void Robot::EnterReturning()
+{
+    robotState = RETURNING;
+    #ifdef __STATE_DEBUG_
+        Serial.println("Entering returning to start position State");
+    #endif
+}
+
+void Robot::HandleReturning()
+{
+    // return home
+
+    // once at home:
+    EnterIdle();
+}
