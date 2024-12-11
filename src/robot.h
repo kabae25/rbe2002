@@ -6,6 +6,7 @@
 #include <Vision.h>
 #include <subsys/arm.h>
 #include <ZSC31014.h>
+#include <event_timer.h>
 
 #define LOAD_CELL_PIN 10
 class Robot

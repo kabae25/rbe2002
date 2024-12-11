@@ -1,6 +1,6 @@
 #pragma once
 #include <servo32u4.h>
-
+#include <event_timer.h>
 class Arm {
     public:
         void enterInit();
