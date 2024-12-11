@@ -20,20 +20,20 @@ void Robot::HandleKeyCode(int16_t keyCode)
     Serial.println(keyCode);
 
     // Regardless of current state, if ENTER is pressed, go to idle state
-    if(keyCode == STOP_MODE) EnterIdleState();
+    if(keyCode == STOP_MODE) EnterIdle();
 
     // The SETUP key is used for tuning motor gains
     else if(keyCode == SETUP_BTN)
     {
-        if(robotCtrlMode == CTRL_SETUP) {EnterTeleopMode(); EnterIdleState();}
-        else {EnterSetupMode(); EnterIdleState();}
+        if(robotCtrlMode == CTRL_SETUP) {EnterTeleopMode(); EnterIdle();}
+        else {EnterSetupMode(); EnterIdle();}
     }
 
     // If PLAY is pressed, it toggles control mode (setup -> teleop)
     else if(keyCode == PLAY_PAUSE) 
     {
-        if(robotCtrlMode == CTRL_AUTO) {EnterTeleopMode(); EnterIdleState();}
-        else if(robotCtrlMode == CTRL_TELEOP) {EnterAutoMode(); EnterIdleState();}
+        if(robotCtrlMode == CTRL_AUTO) {EnterTeleopMode(); EnterIdle();}
+        else if(robotCtrlMode == CTRL_TELEOP) {EnterAutoMode(); EnterIdle();}
     }
 
     
@@ -60,8 +60,9 @@ void Robot::HandleKeyCode(int16_t keyCode)
             case REWIND: // enter the nav state when the rewind button is pressed
                 //robotState = ROBOT_NAVIGATING;
                 atPlatform = false;
-                EnterNavIdle();
-                //EnterNavTurning(HelperNavCalculateDirection());
+                // EnterNavIdle();
+                EnterNavLining(baseSpeed);
+                                //EnterNavTurning(HelperNavCalculateDirection());
                 baseSpeed = keyString.toInt();
                 keyString = "";
                 break;
@@ -117,10 +118,10 @@ void Robot::HandleKeyCode(int16_t keyCode)
                 break;
             case NUM_1:
 
-                arm.raiseArm();
+                arm.raiseArm(false);
                 break;
             case NUM_2:
-                arm.lowerArm();
+                arm.lowerArm(false);
                 break;
         }
     }

@@ -193,9 +193,13 @@ void Robot::HandleNavTurning(void) {
     }
     else if (igoal != icurr || jgoal != jcurr) {
         if(edgeDetected) {
-            arm.lowerArm();
-            // TODO: DEPLOY ARM
-            // TODO: GO BACK DOWN RAMP
+            arm.lowerArm(true);
+            if (arm.checkArmRaised()) {
+                /** Go back down ramp and some arbitrary grid location */
+                jgoal = 1;
+                igoal = 1;
+                EnterNavLining(baseSpeed);
+            }
         } else {
             EnterNavLining(baseSpeed);
         }
@@ -208,6 +212,8 @@ void Robot::HandleNavTurning(void) {
 
 // Nav: handle LINING state
 void Robot::HandleNavLining(void) {
+
+
     if ((!lineSensor.CheckIntersection())) { // || ((prevRamping == false) && (ramping == true))
         // line following is handled sychronously in the robotLoop method
     }

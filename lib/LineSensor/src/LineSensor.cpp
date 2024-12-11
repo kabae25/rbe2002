@@ -2,17 +2,13 @@
 
 #define BRIGHT_THRESHOLD 1200;
 #define EDGE_THRESHOLD 1000;
+#define INTERSECTION_THRESHOLD 2000;
 
 // initialize the linesensors
 void LineSensor::Initialize(void)
 {
-    pinMode(leftSensorPin3, INPUT);
-    pinMode(leftSensorPin2, INPUT);
-    pinMode(leftSensorPin1, INPUT);
-
-    pinMode(rightSensorPin1, INPUT);
-    pinMode(rightSensorPin2, INPUT);
-    pinMode(rightSensorPin3, INPUT);
+    pinMode(leftSensorPin, INPUT);
+    pinMode(rightSensorPin, INPUT);
 }
 
 int16_t LineSensor::CalcError(void) 
@@ -25,11 +21,14 @@ int16_t LineSensor::CalcError(void)
     int16_t color = 1023; // 1023 corresponds to white, 0 to black
 
     // Calculate avg left and right weighted errors by taking each pin and multipling by some weight
-    int16_t left_error = ((color - analogRead(leftSensorPin1))*weight1 + (color - analogRead(leftSensorPin2))*weight2 + (color - analogRead(leftSensorPin3))*weight3);
-    int16_t right_error = ((color - analogRead(rightSensorPin1))*weight1 + (color - analogRead(rightSensorPin2))*weight2 + (color - analogRead(rightSensorPin3))*weight3);
-
+    // int16_t left_error = ((color - analogRead(leftSensorPin1))*weight1 + (color - analogRead(leftSensorPin2))*weight2 + (color - analogRead(leftSensorPin3))*weight3);
+    // int16_t right_error = ((color - analogRead(rightSensorPin1))*weight1 + (color - analogRead(rightSensorPin2))*weight2 + (color - analogRead(rightSensorPin3))*weight3);
+    
     // Calculate the raw line error
-    int16_t error = left_error - right_error;
+    int16_t error = analogRead(leftSensorPin) - analogRead(rightSensorPin);
+    Serial.print(analogRead(leftSensorPin));
+    Serial.print(" ");
+    Serial.println(analogRead(rightSensorPin));
 
     return error;
 }
@@ -72,12 +71,12 @@ bool LineSensor::CheckIntersection(void)
     float weight3 = 3.0; 
     int16_t color = 1023; // 1023 corresponds to white, 0 to black
 
-    // Calculate avg left and right weighted errors by taking each pin and multipling by some weight
-    int16_t left_error = ((color - analogRead(leftSensorPin1))*weight1 + (color - analogRead(leftSensorPin2))*weight2 + (color - analogRead(leftSensorPin3))*weight3);
-    int16_t right_error = ((color - analogRead(rightSensorPin1))*weight1 + (color - analogRead(rightSensorPin2))*weight2 + (color - analogRead(rightSensorPin3))*weight3);
+    // // Calculate avg left and right weighted errors by taking each pin and multipling by some weight
+    // int16_t left_error = ((color - analogRead(leftSensorPin1))*weight1 + (color - analogRead(leftSensorPin2))*weight2 + (color - analogRead(leftSensorPin3))*weight3);
+    // int16_t right_error = ((color - analogRead(rightSensorPin1))*weight1 + (color - analogRead(rightSensorPin2))*weight2 + (color - analogRead(rightSensorPin3))*weight3);
 
-    bool isLeftBright = left_error > 2000;
-    bool isRightBright = right_error > 2000;
+    bool isLeftBright = analogRead(leftSensorPin) > INTERSECTION_THRESHOLD;
+    bool isRightBright = analogRead(rightSensorPin) > INTERSECTION_THRESHOLD;
 
     bool onIntersection = isLeftBright && isRightBright;
     if(onIntersection && !prevOnIntersection) retVal = true;
@@ -90,8 +89,8 @@ bool LineSensor::CheckIntersection(void)
 bool LineSensor::CheckEdge(void)
 {
     bool retVal = false;
-    bool leftEdge = analogRead(leftSensorPin1) > EDGE_THRESHOLD;
-    bool rightEdge = analogRead(rightSensorPin1) > EDGE_THRESHOLD;
+    bool leftEdge = analogRead(leftSensorPin) > EDGE_THRESHOLD;
+    bool rightEdge = analogRead(rightSensorPin) > EDGE_THRESHOLD;
     if (leftEdge && rightEdge)
     {
         retVal = true;
