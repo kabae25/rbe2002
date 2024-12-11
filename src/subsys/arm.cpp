@@ -1,40 +1,70 @@
-#include <arm.h>
+#include "arm.h"
 
 Servo32U4Pin5 servo;
 
-#define AMP_PIN 10
-
-void Arm::init() {
+#define AMP_PIN 12
+#define RAISED_PWM 570
+#define LOWERED_PWM 1700
+void Arm::enterInit()
+{
     servo.attach();
-    pinMode(AMP_PIN, INPUT);
+    servo.setTargetPos(RAISED_PWM);
+    EnterIdle();
 }
 
-void Arm::update() {
+void Arm::update()
+{
     servo.update();
 }
 
-bool Arm::raise() {
-    Serial.println("Arm Raising");
-    utilSetLifter(1000); // 800 works
-    if (servo.currentPos == 1000) {
-        return true;
+void Arm::EnterIdle()
+{
+    state = IDLE;
+}
+
+void Arm::HandleIdle()
+{
+    if (checkLowerCmd()) {
+        EnterLowering();
     }
-    else return false;
-}
-
-bool Arm::lower() {
-    Serial.println("Arm Lowering");
-    servo.setTargetPos(2000);
-    if (servo.currentPos == 2000) {
-        return true;
+    if (checkRaiseCmd()) {
+        EnterRaising();
     }
-    else return false;
+    if (checkWeighCmd()) {
+        EnterWeighing();
+    }
 }
 
-void Arm::utilSetLifter(uint16_t pulseLengthUS) {
-    servo.setTargetPos(pulseLengthUS);
+void Arm::EnterRaising()
+{
+    servo.setTargetPos(RAISED_PWM);
+    state = RAISING;
 }
 
-int Arm::measureWeight() {
-    return analogRead(AMP_PIN);
+void Arm::HandleRaising()
+{
+    if (servo.checkAtTarget()) {
+        EnterIdle();
+    }
+}
+
+void Arm::EnterLowering()
+{
+    servo.setTargetPos(LOWERED_PWM);
+    state = LOWERING;
+}
+
+void Arm::HandleLowering()
+{
+    if (servo.checkAtTarget()) {
+        EnterIdle();
+    }
+}
+
+void Arm::EnterWeighing()
+{
+}
+
+void Arm::HandleWeighing()
+{
 }

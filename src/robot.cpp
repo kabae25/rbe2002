@@ -33,6 +33,7 @@ void Robot::InitializeRobot(void)
     /* servo init */
     arm.init();
 
+    imuSubTimer.start(90);
 
     //loadCellHX1.Init();
 }
@@ -49,34 +50,42 @@ void Robot::EnterIdleState(void)
  */
 void Robot::HandleOrientationUpdate(void)
 {
-    if(robotCtrlMode == CTRL_SETUP)
-    {
-        // TODO: You'll need to add code to LSM6 to update the bias
-        imu.updateGyroBias();
-        //imu.updateAcceBias();
-    }
+        if (!stabilized) {
 
-    else // update orientation
-    {
-        /*
-        * Using moving average to find robot eulerAngles with the gyroscope (prone to drift)
-        */
+        float biasX = 0.96 * imu.gyroBias.x + (1-0.96) * imu.g.x;
+        float biasY = 0.95 * imu.gyroBias.y + (1-0.95) * imu.g.y;
+        float biasZ = 0.98 * imu.gyroBias.z + (1-0.98) * imu.g.z;
+
+        if (imuSubTimer.checkExpired(true)) {
+            biasDelta = 0.98*biasDelta + (1-0.98)*((imu.gyroBias.z - prevZBias) / 0.09); // get imu drift per second
+            //plotVariable("Bias Filter", abs(biasDelta));
+            prevZBias = imu.gyroBias.z;
+
+            if (abs(biasDelta) < 0.25) { // once imu delta has settled,
+                imuSubTimer.cancel();
+                stabilized = true;
+            }
+        }
+
+        imu.gyroBias.x = biasX;
+        imu.gyroBias.y = biasY;
+        imu.gyroBias.z = biasZ;
+    }
+    else {
+        // once the bias is tolerable, enable the complimentary filter and send the imu angles
         eulerAngles.x += (imu.mdpsPerLSB*(imu.g.x - imu.gyroBias.x)*(1/imu.gyroODR))/1000;
         eulerAngles.z += (imu.mdpsPerLSB*(imu.g.z - imu.gyroBias.z)*(1/imu.gyroODR))/1000;
-
-
+    
         /*
          * Pitch axis complementary filter 
          */
         double prediction = eulerAngles.y + ((1/imu.gyroODR)*(imu.mdpsPerLSB/1000)*(imu.g.y - imu.gyroBias.y));
-
         double observation = (180/PI) * atan2(-imu.a.x, imu.a.z);
-
+    
         double KAPPA = 0.01; // 0.009 worked well // 0 relies purely on the prediction from the gyro
         eulerAngles.y = (1-KAPPA)*prediction + KAPPA*(observation);
-
+    
         double EPSILON = 0.01; // Factor of new gyro bias adjustment
-
         if (KAPPA != 0) {
             imu.gyroBias.y -= EPSILON*(1.0/((imu.mdpsPerLSB/1000.0) * imu.gyroODR))*(observation - prediction);
         }

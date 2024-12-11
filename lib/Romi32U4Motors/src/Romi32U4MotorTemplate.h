@@ -115,22 +115,20 @@ protected:
     {
         if(ctrlMode == CTRL_SPEED)
         {
-            // Calculate the error in speed
-            float error = targetSpeed - speed; // targetSpeed - speed
-            
-            // If not at clamp threshold, Accumulate error for the integral term
-            sumError+=error; // (90 might be more practical) 1000 is some arbitrary number i picked TODO: fix this number
-        
-            // Get the derivative error 
-            float d_error = (error-prevError); // no time set term because the samples are discrete
+            int16_t ff = 1.62 + 5.21 * targetSpeed + -1.31E-03 * pow(targetSpeed,2) + -4.36E-04 * (pow(targetSpeed, 3));
+
+            float error = targetSpeed - speed;
+            sumError += error;
+
+            sumError = constrain(sumError, -350, 350);
             
 
             // Calculate the effort from the PID gains
-            int16_t effort = Kp*error + Ki*sumError + Kd*d_error;
+            int16_t effort = ff + Kp * error + Ki * sumError + Kd * (error - prevError);
 
-            prevError = error; // update D term error
             // Set the effort for the motor
             SetEffort(effort);
+            prevError = error;
 
             
             // print debug information  

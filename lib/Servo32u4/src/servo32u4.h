@@ -50,6 +50,12 @@ public:
     virtual void detach(void) = 0;
     uint16_t currentPos = 1500;
 
+    bool checkAtTarget() {
+        if(currentPos == targetPos){
+            return true;
+        } 
+        return false;
+    }
     void setTargetPos(uint16_t target) {targetPos = target;}
     void update(void) 
     {
@@ -64,7 +70,10 @@ public:
     uint16_t setMinMaxMicroseconds(uint16_t min, uint16_t max);
 
     virtual void writeMicroseconds(uint16_t microseconds) = 0;
+
+
 };
+
 
 /** \class Servo32U4Pin5
  * \brief A servo class to control a servo on pin 5.
