@@ -58,7 +58,7 @@ void Robot::HandleKeyCode(int16_t keyCode)
                 keyString = "";
                 break;
             case REWIND: // enter the nav state when the rewind button is pressed
-                robotState = ROBOT_NAVIGATING;
+                //robotState = ROBOT_NAVIGATING;
                 atPlatform = false;
                 EnterNavIdle();
                 //EnterNavTurning(HelperNavCalculateDirection());
@@ -67,7 +67,7 @@ void Robot::HandleKeyCode(int16_t keyCode)
                 break;
             
             case STOP_MODE:
-                robotState = ROBOT_MANIPULATING;
+                //robotState = ROBOT_MANIPULATING;
                 EnterManSearching();
                 break;
             case NUM_1:
@@ -100,26 +100,26 @@ void Robot::HandleKeyCode(int16_t keyCode)
         {
             // turning debug
             case UP_ARROW: // set the desired heading to north
-                robotState = ROBOT_NAVIGATING;
+                //robotState = ROBOT_NAVIGATING;
                 EnterNavTurning(1);
                 break;
             case RIGHT_ARROW: // set the desired heading to east
-                robotState = ROBOT_NAVIGATING;
+                //robotState = ROBOT_NAVIGATING;
                 EnterNavTurning(0);
                 break;
             case DOWN_ARROW: // set the desired heading to south
-                robotState = ROBOT_NAVIGATING;
+                //robotState = ROBOT_NAVIGATING;
                 EnterNavTurning(3);
                 break;
             case LEFT_ARROW: // set the desired heading to west
-                robotState = ROBOT_NAVIGATING;
+                //robotState = ROBOT_NAVIGATING;
                 EnterNavTurning(2);
                 break;
             case NUM_1:
-                arm.raise();
+                //arm.raise();
                 break;
             case NUM_2:
-                arm.lower();
+                //arm.lower();
                 break;
         }
     }

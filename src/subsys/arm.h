@@ -7,10 +7,16 @@ class Arm {
 
         void update();
 
-        void raiseArm() {raiseCmd = true;}
-        void lowerArm() {lowerCmd = true;}
+        bool checkArmRaised();
+        bool checkArmLowered();
+        
+        void raiseArm(bool needsToBeChecked) {raiseCmd = true; raiseNeedsToBeChecked = needsToBeChecked; }
+        void lowerArm(bool needsToBeChecked) {lowerCmd = true; lowerNeedsToBeChecked = needsToBeChecked; }
         void weigh() {weighCmd = true;}
-    protected:
+    private:
+        bool raiseNeedsToBeChecked = false;
+        bool lowerNeedsToBeChecked = false;
+
         bool checkRaiseCmd() {
             if(raiseCmd) {
                 raiseCmd = false;

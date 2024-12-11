@@ -20,6 +20,7 @@ void Robot::InitializeRobot(void)
      */
     imu.init();
 
+    arm.enterInit();
 
     pinMode(13, OUTPUT);
 
@@ -31,16 +32,9 @@ void Robot::InitializeRobot(void)
     vision.init();
 
     /* servo init */
-    arm.init();
-
     imuSubTimer.start(90);
 
     //loadCellHX1.Init();
-}
-
-void Robot::EnterIdleState(void)
-{
-    chassis.Stop(); 
 }
 
 /**
@@ -329,35 +323,39 @@ void Robot::HelperLineFollowingUpdate(void) {
     chassis.SetTwist(baseSpeed, effort);
 }
 
+// PLEASE REMOVE - REDUNDANT & BLOAT 
 void Robot::EnterManIdle(void) {
     chassis.Stop();
     manipulatingState = MANIPULATING_IDLE;
     Serial.println("Entering MANIPULATING: Idle");
 }
 
+// PLEASE REMOVE - REDUNDANT & BLOAT 
 void Robot::EnterManSearching(void) {
     chassis.Stop();
     chassis.SetTwist(0, 1);
     manipulatingState = MANIPULATING_SEARCHING;
     Serial.println("Entering MANIPULATING: Searching");
-
 }
+// PLEASE REMOVE - REDUNDANT & BLOAT 
 
 void Robot::EnterManApproaching(void) {
     chassis.Stop();
-    arm.lowerArm();
+    arm.lowerArm(false);
     timestamp = (millis() + remembrance);
     manipulatingState = MANIPULATING_APPROACHING;
     Serial.println("Entering MANIPULATING: Approaching");
 
 }
+// PLEASE REMOVE - REDUNDANT & BLOAT 
 
 void Robot::EnterManLifting(void) {
-    arm.raiseArm();
+    //arm.raiseArm();
     manipulatingState = MANIPULATING_LIFTING;
     Serial.println("Entering MANIPULATING: Lifting");
 
 }
+// PLEASE REMOVE - REDUNDANT & BLOAT 
 
 void Robot::EnterManWeighing(void) {
     weightTimer.start(20);
@@ -365,10 +363,12 @@ void Robot::EnterManWeighing(void) {
     Serial.println("Entering MANIPULATING: Weighing");
 
 }
+// PLEASE REMOVE - REDUNDANT & BLOAT 
 
 void Robot::HandleManIdle(void) {
     
 }
+// PLEASE REMOVE - REDUNDANT & BLOAT 
 
 void Robot::HandleManSearching(void) {
     if (vision.FindAprilTags(tag)) {
@@ -378,6 +378,7 @@ void Robot::HandleManSearching(void) {
 
 }
 
+// PLEASE REMOVE - REDUNDANT & BLOAT 
 
 void Robot::HandleManApproaching(void) {
 
@@ -411,12 +412,14 @@ void Robot::HandleManApproaching(void) {
         EnterManLifting();
     }
 }
+// PLEASE REMOVE - REDUNDANT & BLOAT 
 
 void Robot::HandleManLifting(void) {
-    if (arm.raise()) {
+    if (arm.checkArmRaised()) {
         EnterManWeighing();
     }
 }
+// PLEASE REMOVE - REDUNDANT & BLOAT 
 
 void Robot::HandleManWeighing(void) {
     if (weightTimer.checkExpired(true)) {
@@ -435,12 +438,12 @@ void Robot::HandleManWeighing(void) {
     }
 }
 
-uint8_t Robot::HelperCheckApproachComplete(int headingTolerance, int distanceTolerance) {
+bool Robot::HelperCheckApproachComplete(int headingTolerance, int distanceTolerance) {
 
     if (distanceTolerance <= headingTolerance) {
-        return 1;
+        return true;
     }
-    else return 0;
+    else return false;
 }
 
 
@@ -483,7 +486,7 @@ void Robot::RobotLoop(void)
             HandleIdle(); break;
         case DRIVING_BIN:
             HandleDrivingBin(); break;
-        case COLLECTING:
+        case COLLECTING: // inclusive of the searching state
             HandleCollecting(); break;
         case WEIGHING:
             HandleWeighing(); break;
@@ -550,7 +553,7 @@ void Robot::RobotLoop(void)
 
 void Robot::EnterInit()
 {
-    arm.raiseArm();
+    arm.raiseArm(false);
     robotState = INIT;
 }
 
@@ -581,7 +584,7 @@ void Robot::HandleDrivingBin()
 
 void Robot::EnterCollecting()
 {
-    arm.lowerArm();
+    arm.lowerArm(false);
     robotState = COLLECTING;
     #ifdef __STATE_DEBUG_
         Serial.println("Entering Collecting Bin State");
@@ -617,8 +620,8 @@ void Robot::HandleCollecting()
     chassis.SetTwist(forward_effort, -rot_effort);
 
     if (-tag.z < 3.5) {
-        arm.raiseArm();
-        if (arm.checkRaisingComplete()) {
+        arm.raiseArm(true);
+        if (arm.checkArmRaised()) {
             EnterWeighing();
         }
     }
@@ -689,7 +692,7 @@ void Robot::EnterDumping()
 
 void Robot::HandleDumping()
 {
-    arm.lowerArm();
+    arm.lowerArm(false);
     // once arm is lowered
     // go to returning home state
 }

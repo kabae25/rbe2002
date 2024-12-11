@@ -38,10 +38,8 @@ protected:
         NAVIGATING_PULLUP,
     };
 
-    /**
-     * This statemachine controls the actions of the robot while it is in the MANIPULATING state
-     * This includes locating and driving to april tags, lifting and weighing trash
-     */
+
+// PLEASE REMOVE - REDUNDANT
     enum MANIPULATING_STATE {
         MANIPULATING_IDLE,
         MANIPULATING_SEARCHING,
@@ -49,8 +47,6 @@ protected:
         MANIPULATING_LIFTING,
         MANIPULATING_WEIGHING
     };
-
-
 
     // set default navigating state
     NAVIGATING_STATE navigatingState = NAVIGATING_IDLE;
@@ -183,10 +179,9 @@ protected:
     /* For managing IR remote key presses*/
     void HandleKeyCode(int16_t keyCode);
 
-    /* State changes */    
-    void EnterIdleState(void);
-
-    /* Navigating State machine Methods*/
+    /**
+     * KEEP THESE :) MIGHT BE USEFUL
+     */
     void EnterNavTurning(int cardinal);
     void EnterNavLining(int speed);
     void EnterNavPullup(int time);
@@ -202,6 +197,8 @@ protected:
     void HelperLineFollowingUpdate(void);
 
     /* Manipulating state machine methods */
+
+// PLEASE REMOVE - REDUNDANT & BLOAT 
     void EnterManIdle(void);
     void EnterManSearching(void);
     void EnterManApproaching(void);
@@ -215,7 +212,7 @@ protected:
     void HandleManWeighing(void);
 
     /* Manipulating state helper methods */
-    uint8_t HelperCheckApproachComplete(int headingTolerance, int distanceTolerance);
+    bool HelperCheckApproachComplete(int headingTolerance, int distanceTolerance);
 
     /* Mode changes */
     void EnterTeleopMode(void);
@@ -234,9 +231,5 @@ protected:
     float biasDelta = 0;
     EventTimer imuSubTimer;
     float prevZBias =0 ;
-    
-
-    /* For commanding the lifter servo */
-    void SetLifter(uint16_t position);
 };
  
