@@ -1,13 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-
-#define LEFT_INNER_SENSOR A6
-#define RIGHT_INNER_SENSOR A4
-#define LEFT_OUTER_SENSOR A11
-#define RIGHT_OUTER_SENSOR A0
-
-#define EXPO 0.9
+#include "constants.h"
 
 class LineSensor
 {

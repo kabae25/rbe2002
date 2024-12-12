@@ -1,11 +1,10 @@
 #include "arm.h"
 
+#include "constants.h"
+
 Servo32U4Pin5 servo;
 
-#define AMP_PIN 12
-#define RAISED_PWM 570
-#define LOWERED_PWM 1700
-#define LOAD_CELL_PIN 10 //TODO CHANGE TO ACTUAL ANALOG PIN
+
 
 void Arm::enterInit()
 {

@@ -39,21 +39,8 @@ protected:
         NAVIGATING_PULLUP,
     };
 
-
-// PLEASE REMOVE - REDUNDANT
-    enum MANIPULATING_STATE {
-        MANIPULATING_IDLE,
-        MANIPULATING_SEARCHING,
-        MANIPULATING_APPROACHING,
-        MANIPULATING_LIFTING,
-        MANIPULATING_WEIGHING
-    };
-
     // set default navigating state
     NAVIGATING_STATE navigatingState = NAVIGATING_IDLE;
-
-    // set default manipulating state
-    MANIPULATING_STATE manipulatingState = MANIPULATING_IDLE;
 
     /* Define the chassis*/
     Chassis chassis;
@@ -201,29 +188,10 @@ protected:
     int HelperNavCalculateDirection(void);
     void HelperLineFollowingUpdate(void);
 
-    /* Manipulating state machine methods */
-
-// PLEASE REMOVE - REDUNDANT & BLOAT 
-    void EnterManIdle(void);
-    void EnterManSearching(void);
-    void EnterManApproaching(void);
-    void EnterManLifting(void);
-    void EnterManWeighing(void);
-
-    void HandleManIdle(void);
-    void HandleManSearching(void);
-    void HandleManApproaching(void);
-    void HandleManLifting(void);
-    void HandleManWeighing(void);
-
-    /* Manipulating state helper methods */
-    bool HelperCheckApproachComplete(int headingTolerance, int distanceTolerance);
-
     /* Mode changes */
     void EnterTeleopMode(void);
     void EnterAutoMode(void);
     void EnterSetupMode(void);
-
 
     /**
      * For IMU
