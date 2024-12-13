@@ -84,7 +84,7 @@ void Robot::HandleCollectingBin()
     }
     else {
       Serial.println("TURNING");
-        chassis.SetTwist(0, 0.15);
+      chassis.SetTwist(0, 0.15);
     }
 }
 
@@ -130,12 +130,14 @@ void Robot::HandleDrivingRamp()
             else {
                 retreatingFromBin = false;
                 turnToRamp = true;
-                chassis.SetTwist(0, -0.3);
+                chassis.SetTwist(0, 0.3);
             }
     }
     else {
         if (turnToRamp){
-            if (fabs(eulerAngles.z - 90) < 1 ){
+            if (currDirection == 1){
+                Serial.println("Done turning to ramp");
+                drivingToRamp = true;
                 EnterDrivingToDump();
             }
         }
@@ -186,7 +188,8 @@ void Robot::HandleDumpingBin()
         spinning180 = true;
         chassis.SetTwist(0, 0.5);
     }
-    if (spinning180 && (fabs(eulerAngles.z - (-90)) < 5)) {
+    if (spinning180 && (currDirection == 3)) {
+      Serial.println("Done spinning");
         arm.EnterLowering();
         chassis.SetTwist(0,0);
         EnterIdle();
@@ -220,7 +223,7 @@ void Robot::HandleOrientationUpdate(void)
             //plotVariable("Bias Filter", abs(biasDelta));
             prevZBias = imu.gyroBias.z;
 
-            if (abs(biasDelta) < 2) { // was 0.25 // once imu delta has settled,
+            if (abs(biasDelta) < 0.5) { // was 0.25 // once imu delta has settled,
                 imuSubTimer.cancel();
                 stabilized = true;
             }
@@ -271,7 +274,7 @@ void Robot::HandleOrientationUpdate(void)
         //plot("Bias Z", imu.gyroBias.z);
         //plot("Acc X", imu.a.x);
         //plot("Acc Y", imu.a.y);
-        //plot("Acc Z", imu.a.z);
+        //plot("", imu.a.z);
     #endif
 }
 
@@ -292,7 +295,7 @@ void Robot::utilUpdatePitchIndication(void) {
         ramping = true;
         digitalWrite(13, HIGH);
     }
-    else if ((eulerAngles.y > -10.0) && (ramping == true)) {
+    else if ((eulerAngles.y > -3.0) && (ramping == true)) {
         atPlatform = true;
         ramping = false;
         digitalWrite(13, LOW);
@@ -368,7 +371,7 @@ void Robot::HandleNavTurning(void) {
 
 // Nav: handle LINING state
 void Robot::HandleNavLining(void) {
-    if ((!lineSensor.CheckIntersection())) { // || ((prevRamping == false) && (ramping == true))
+    if ((!lineSensor.CheckIntersection()) || drivingToRamp) { // || ((prevRamping == false) && (ramping == true))
 
         float lineError = lineSensor.CalcError();
         float lineErrorDerivative = lineError - prevLineError;
@@ -409,7 +412,7 @@ void Robot::HandleNavPullup(void) {
         }
         targetTime = 0;
         chassis.Stop();
-        EnterNavTurning(HelperNavCalculateDirection());
+        // EnterNavTurning(HelperNavCalculateDirection(J));
     }
 }
 

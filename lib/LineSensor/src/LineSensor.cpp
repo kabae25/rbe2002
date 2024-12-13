@@ -86,10 +86,10 @@ bool LineSensor::CheckIntersection(void)
 
 bool LineSensor::CheckEdge(void)
 {
+    Serial.println(analogRead(LEFT_OUTER_SENSOR));
     bool retVal = false;
     bool leftEdge = analogRead(LEFT_OUTER_SENSOR) > EDGE_THRESHOLD;
-    bool rightEdge = analogRead(RIGHT_OUTER_SENSOR) > EDGE_THRESHOLD;
-    if (leftEdge && rightEdge)
+    if (leftEdge)
     {
         retVal = true;
     }

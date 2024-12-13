@@ -62,7 +62,7 @@ void Robot::HandleKeyCode(int16_t keyCode)
                 atPlatform = false;
                 // EnterNavIdle();
                 //EnterNavLining(baseSpeed);
-                EnterNavTurning(HelperNavCalculateDirection());
+                // EnterNavTurning(HelperNavCalculateDirection());
                 baseSpeed = keyString.toInt();
                 keyString = "";
                 break;
@@ -130,6 +130,9 @@ void Robot::HandleKeyCode(int16_t keyCode)
             case NUM_2:
                 arm.lowerArm(false);
                 break;
+            case NUM_3:
+              EnterCollectingBin();
+              break;
         }
     }
 

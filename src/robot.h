@@ -68,6 +68,7 @@ protected:
     bool turnToRamp = false;
     bool gottenToEdge = false;
     bool spinning180 = false;
+    bool drivingToRamp = false;
 
     /**
      * Navigating Statemachine

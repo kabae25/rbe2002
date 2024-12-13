@@ -20,5 +20,5 @@ typedef struct Tag {
     angle; // follows 0 = east, 3 = south system
 };
 
-Tag tag_0 {0, 2, 2, 0};
-Tag tag_1 {0, 2, 3, 0};
+// Tag tag_0 {0, 2, 2, 0};
+// Tag tag_1 {0, 2, 3, 0};
