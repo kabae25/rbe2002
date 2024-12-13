@@ -76,7 +76,8 @@ void Arm::HandleRaising()
 
 void Arm::EnterLowering()
 {
-    servo.setTargetPos(LOWERED_PWM);
+    // servo.setTargetPos(LOWERED_PWM);
+    servo.setTargetPos(0);
     state = LOWERING;
 }
 

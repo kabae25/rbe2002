@@ -6,7 +6,7 @@
  */
 #define AMP_PIN 12 // for the AD620
 #define RAISED_PWM 570
-#define LOWERED_PWM 1700
+#define LOWERED_PWM 1800
 #define LOAD_CELL_PIN 10 //TODO CHANGE TO ACTUAL ANALOG PIN
 
 /**
