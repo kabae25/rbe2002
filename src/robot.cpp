@@ -71,7 +71,6 @@ void Robot::HandleCollectingBin()
     if (vision.FindAprilTags(tag)) { // calculate the trust of the april tag reading
         if (-tag.z < 3.5) {
             EnterWeighingBin();
-            arm.raiseArm(true);
         }
         else { // go to the april tiag
             float rot_error = 0 - (tag.x); // center - x
