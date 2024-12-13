@@ -54,6 +54,7 @@ void Robot::HandleLiningToBin()
 void Robot::EnterSearchingBin()
 {
     robotState = SEARCHING_BIN;
+    EnterNavIdle();
     arm.lowerArm(false);
     #ifdef __STATE_DEBUG_
         Serial.println("Entering Searching Bin State");
@@ -63,6 +64,7 @@ void Robot::EnterSearchingBin()
 void Robot::EnterCollectingBin()
 {
     robotState = COLLECTING;
+    startingEncoderForMove = chassis.getEncoder();
     #ifdef __STATE_DEBUG_
         Serial.println("Entering Collecting Bin State");
     #endif
@@ -143,12 +145,12 @@ void Robot::HandleDrivingRamp()
             else {
                 retreatingFromBin = false;
                 turnToRamp = true;
-                chassis.SetTwist(0, 0.3);
+                chassis.SetTwist(0, -0.3);
             }
     }
     else {
         if (turnToRamp){
-            if (currDirection == 1){
+            if (fabs((eulerAngles.z) - 90) < 10){
                 Serial.println("Done turning to ramp");
                 drivingToRamp = true;
                 EnterDrivingToDump();
@@ -197,7 +199,7 @@ void Robot::HandleDumpingBin()
         gottenToEdge = true;
         chassis.SetTwist(-2, 0);
     }
-    if (gottenToEdge && ((startingEncoderForMove - 5 * chassis.LEFT_CM_S_TO_TICKS_INT) > chassis.getEncoder())) {
+    if (gottenToEdge && ((startingEncoderForMove - 10 * chassis.LEFT_CM_S_TO_TICKS_INT) > chassis.getEncoder())) {
         spinning180 = true;
         chassis.SetTwist(0, 0.5);
     }

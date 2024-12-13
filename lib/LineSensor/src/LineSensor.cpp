@@ -78,10 +78,9 @@ bool LineSensor::CheckIntersection(void)
 
     bool isRightLower = analogRead(RIGHT_OUTER_SENSOR) > INTERSECTION_LOWER_THRESHOLD;
     bool isRightUpper = analogRead(RIGHT_OUTER_SENSOR) < INTERSECTION_UPPER_THRESHOLD;
-    // Serial.println("FOUND INTERSECTION");
-    Serial.print(analogRead(LEFT_OUTER_SENSOR));
-    Serial.print(" ");
-    Serial.println(analogRead(RIGHT_OUTER_SENSOR));
+    //Serial.print(analogRead(LEFT_OUTER_SENSOR));
+    //Serial.print(" ");
+    //Serial.println(analogRead(RIGHT_OUTER_SENSOR));
     bool onIntersection = isLeftLower && isLeftUpper && isRightLower && isRightUpper;
     if(onIntersection && !prevOnIntersection) retVal = true;
 

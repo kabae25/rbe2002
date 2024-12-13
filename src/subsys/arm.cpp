@@ -93,7 +93,7 @@ void Arm::EnterWeighing()
     state = WEIGHING;
     weightSum = 0;
     weight_count = 0;
-    Serial.println("Entering Weighing");
+    //Serial.println("Entering Weighing");
 }
 
 float Arm::calculateWeight(float weightADC)

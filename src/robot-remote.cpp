@@ -211,6 +211,7 @@ void Robot::HandleKeyCode(int16_t keyCode)
 void Robot::EnterTeleopMode(void)
 {
     controlModeChange("TELEOP");
+    Serial.println("now in teleop");
     robotCtrlMode = CTRL_TELEOP;
 }
 
