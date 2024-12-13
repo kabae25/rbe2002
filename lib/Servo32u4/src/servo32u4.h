@@ -51,7 +51,7 @@ public:
     uint16_t currentPos = 1500;
 
     bool checkAtTarget() {
-        if(currentPos == targetPos){
+        if(fabs(currentPos - targetPos) < 10){
             return true;
         } 
         return false;

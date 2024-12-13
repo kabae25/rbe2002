@@ -12,10 +12,6 @@
 class Robot
 {
 protected:
-    /**
-     * We define some modes for you. SETUP is used for adjusting gains and so forth. Most
-     * of the activities will run in AUTO. You shouldn't need to mess with these.
-     */
     enum ROBOT_CTRL_MODE {
         CTRL_TELEOP,
         CTRL_AUTO,
@@ -39,21 +35,16 @@ protected:
         NAVIGATING_PULLUP,
     };
 
-    // set default navigating state
     NAVIGATING_STATE navigatingState = NAVIGATING_IDLE;
 
-    /* Define the chassis*/
     Chassis chassis;
 
-    /* Line sensor */
     LineSensor lineSensor;
 
-    /* esp32 board */
     Esp32 esp32;
 
     Vision vision;
 
-    // For managing key presses
     String keyString;
 
     /* ---- Initialize the Arm ---- */
@@ -73,6 +64,7 @@ protected:
     /**
      * Navigating Statemachine
      */
+    bool moving = false;
     float baseSpeed = 0;
 
     float numTurns = 0; // Number of 90 degree turns to perform
@@ -110,6 +102,8 @@ protected:
 
     bool edgeDetected = false;
     bool completedLeg = false;
+
+    EventTimer alignTimer;
 
 public:
     Robot(void) {keyString.reserve(8);} //reserve some memory to avoid reallocation
@@ -149,23 +143,23 @@ private:
 public:
     void EnterInit();
     void EnterIdle();
-    void EnterDrivingBin();
-    void EnterCollecting();
-    void EnterWeighing();
-    void EnterDrivingRamp();
-    void EnterDrivingDump();
-    void EnterDumping();
-    void EnterReturning();
+    void EnterDrivingToBin();
+    void EnterCollectingBin();
+    void EnterWeighingBin();
+    void EnterDrivingToRamp();
+    void EnterDrivingToDump();
+    void EnterDumpingBin();
+    void EnterReturningHome();
 
 private:
     void HandleIdle();
-    void HandleDrivingBin();
-    void HandleCollecting();
-    void HandleWeighing();
+    void HandleDrivingToBin();
+    void HandleCollectingBin();
+    void HandleWeighingBin();
     void HandleDrivingRamp();
     void HandleDrivingDump();
-    void HandleDumping();
-    void HandleReturning();
+    void HandleDumpingBin();
+    void HandleReturningHome();
 
 protected:
     /* For managing IR remote key presses*/

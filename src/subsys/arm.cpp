@@ -56,9 +56,9 @@ void Arm::HandleIdle()
 }
 
 // Returns TRUE if arm is busy weighing
-bool Arm::checkWeighing()
+bool Arm::checkWeighingComplete()
 {
-    return isWeighing;
+    return isDoneWeighing;
 }
 
 void Arm::EnterRaising()
@@ -70,7 +70,7 @@ void Arm::EnterRaising()
 void Arm::HandleRaising()
 {
     if (servo.checkAtTarget()) {
-        EnterIdle();
+        EnterWeighing();
     }
 }
 
@@ -112,6 +112,8 @@ void Arm::HandleWeighing()
                 plotVariable("weight ADC", analogRead(WEIGHING_PIN));
                 plotVariable("weight (g)", calculateWeight(analogRead(WEIGHING_PIN)));
                 #endif
+                EnterIdle();
+                isDoneWeighing = true;
             }
         }
 }

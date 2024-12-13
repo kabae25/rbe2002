@@ -9,14 +9,13 @@ class Arm {
 
         bool checkArmRaised();
         bool checkArmLowered();
-        bool checkWeighing();
+        bool checkWeighingComplete();
         
         void raiseArm(bool needsToBeChecked) {raiseCmd = true; raiseNeedsToBeChecked = needsToBeChecked; }
         void lowerArm(bool needsToBeChecked) {lowerCmd = true; lowerNeedsToBeChecked = needsToBeChecked; }
         void weigh() {weighCmd = true;}
         float calculateWeight(float weightADC);
 
-    private:
         bool raiseNeedsToBeChecked = false;
         bool lowerNeedsToBeChecked = false;
 
@@ -46,7 +45,7 @@ class Arm {
         EventTimer weightTimer;
         unsigned int weight_count = 0;
         unsigned int mass = 0;
-        bool isWeighing = false;
+        bool isDoneWeighing = false;
         float weightSum = 0;
 
         void EnterIdle();
