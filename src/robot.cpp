@@ -459,6 +459,7 @@ void Robot::HelperLineFollowingUpdate(void) {
 
 void Robot::RobotLoop(void) 
 {
+    plot("Weight", analogRead(A3));
     int16_t keyCode = decoder.getKeyCode();
     if(keyCode != -1) HandleKeyCode(keyCode);
 
