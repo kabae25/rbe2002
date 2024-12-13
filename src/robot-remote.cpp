@@ -133,6 +133,10 @@ void Robot::HandleKeyCode(int16_t keyCode)
             case NUM_3:
               EnterSearchingBin();
               break;
+            case NUM_4:
+              drivingToRamp = true;
+              EnterDrivingToDump();
+              break;
         }
     }
 
