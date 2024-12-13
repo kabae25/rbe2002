@@ -73,10 +73,16 @@ bool LineSensor::CheckIntersection(void)
     // int16_t left_error = ((color - analogRead(leftSensorPin1))*weight1 + (color - analogRead(leftSensorPin2))*weight2 + (color - analogRead(leftSensorPin3))*weight3);
     // int16_t right_error = ((color - analogRead(rightSensorPin1))*weight1 + (color - analogRead(rightSensorPin2))*weight2 + (color - analogRead(rightSensorPin3))*weight3);
 
-    bool isLeftBright = analogRead(LEFT_OUTER_SENSOR) > INTERSECTION_LOWER_THRESHOLD;
-    bool isRightBright = analogRead(RIGHT_OUTER_SENSOR) > INTERSECTION_UPPER_THRESHOLD;
+    bool isLeftLower = analogRead(LEFT_OUTER_SENSOR) > INTERSECTION_LOWER_THRESHOLD;
+    bool isLeftUpper = analogRead(LEFT_OUTER_SENSOR) < INTERSECTION_UPPER_THRESHOLD;
 
-    bool onIntersection = isLeftBright && isRightBright;
+    bool isRightLower = analogRead(RIGHT_OUTER_SENSOR) > INTERSECTION_LOWER_THRESHOLD;
+    bool isRightUpper = analogRead(RIGHT_OUTER_SENSOR) < INTERSECTION_UPPER_THRESHOLD;
+    // Serial.println("FOUND INTERSECTION");
+    Serial.print(analogRead(LEFT_OUTER_SENSOR));
+    Serial.print(" ");
+    Serial.println(analogRead(RIGHT_OUTER_SENSOR));
+    bool onIntersection = isLeftLower && isLeftUpper && isRightLower && isRightUpper;
     if(onIntersection && !prevOnIntersection) retVal = true;
 
     prevOnIntersection = onIntersection;

@@ -134,8 +134,11 @@ void Robot::HandleKeyCode(int16_t keyCode)
               EnterSearchingBin();
               break;
             case NUM_4:
-              drivingToRamp = true;
-              EnterDrivingToDump();
+              // drivingToRamp = true;
+              EnterDrivingToBin();
+              break;
+            case NUM_5:
+              lineSensor.CheckIntersection();
               break;
         }
     }

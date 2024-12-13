@@ -85,8 +85,8 @@ protected:
     int currTime = 0; // used in the NavPullUp class
     int targetTime = 0; // used in the NavPullUp class
 
-    int igoal = 2;
-    int jgoal = 2;
+    int igoal = 1;
+    int jgoal = 1;
 
     int icurr = 0;
     int jcurr = 0;
@@ -157,7 +157,7 @@ private:
 public:
     void EnterInit();
     void EnterIdle();
-    void EnterDrivingToBin(Tag goal_tag);
+    void EnterDrivingToBin();
     void EnterCollectingBin();
     void EnterWeighingBin();
     void EnterDrivingToRamp();

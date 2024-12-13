@@ -36,12 +36,11 @@ void Robot::HandleIdle()
     // receive a begin state from mqtt
 }
 
-void Robot::EnterDrivingToBin(Tag goal_tag)
+void Robot::EnterDrivingToBin()
 {
-    igoal = goal_tag.x;
-    jgoal = goal_tag.y;
-    
+
     robotState = DRIVING_BIN;
+    navigatingState = NAVIGATING_LINING;
     #ifdef __STATE_DEBUG_
         Serial.println("Entering Driving to Bin State");
     #endif
@@ -80,7 +79,7 @@ void Robot::HandleSearchingBin() {
 void Robot::HandleCollectingBin()
 {
     if (vision.FindAprilTags(tag)) { // calculate the trust of the april tag reading
-        if (-tag.z < 3.5) {
+        if (-tag.z < 4.5) {
           Serial.println("too close");
           EnterWeighingBin();
           // arm.raiseArm(true);
@@ -94,6 +93,8 @@ void Robot::HandleCollectingBin()
             float forward_error = 3 - (-tag.z);
             float forward_Kp = 3;
             float forward_effort = (forward_Kp * forward_error);
+            Serial.print("forward_effort: "); Serial.println(forward_effort);
+            Serial.print("rot_effort: "); Serial.println(rot_effort);
             chassis.SetTwist(forward_effort, rot_effort);
         }
     }
@@ -112,10 +113,11 @@ void Robot::EnterWeighingBin()
 void Robot::HandleWeighingBin()
 { 
     Serial.println((millis() / 1000) - alignTimerStartTime);
-    if ((millis() / 1000) - alignTimerStartTime > 3) {
+    if ((millis() / 1000) - alignTimerStartTime > 5) {
         chassis.SetWheelSpeeds(0, 0);
         arm.raiseArm(true);
         if(arm.checkWeighingComplete()) {
+            Serial.println("Weighing complete");
             EnterDrivingToRamp();
         }
     } else {
@@ -423,8 +425,9 @@ void Robot::HandleNavPullup(void) {
                 break;
         }
         targetTime = 0;
+        Serial.print("jcurr: "); Serial.print(jcurr); Serial.print(", icurr: "); Serial.println(icurr);
         chassis.Stop();
-        // EnterNavTurning(HelperNavCalculateDirection(J));
+        EnterNavTurning(HelperNavCalculateDirection(J));
     }
 }
 
@@ -460,7 +463,7 @@ void Robot::HelperLineFollowingUpdate(void) {
 
 void Robot::RobotLoop(void) 
 {
-    plot("Weight", analogRead(A3));
+    // plot("Weight", analogRead(A3));
     int16_t keyCode = decoder.getKeyCode();
     if(keyCode != -1) HandleKeyCode(keyCode);
 
