@@ -125,10 +125,10 @@ void Robot::HandleKeyCode(int16_t keyCode)
                 break;
             case NUM_1:
 
-                arm.raiseArm(false);
+                arm.EnterRaising();
                 break;
             case NUM_2:
-                arm.lowerArm(false);
+                arm.EnterLowering();
                 break;
             case NUM_3:
               EnterSearchingBin();

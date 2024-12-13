@@ -81,6 +81,10 @@ void Arm::EnterLowering()
     state = LOWERING;
 }
 
+void Arm::set(int pos) {
+    servo.setTargetPos(pos);
+}
+
 void Arm::HandleLowering()
 {
     if (servo.checkAtTarget()) {

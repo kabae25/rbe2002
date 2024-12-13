@@ -10,6 +10,8 @@ class Arm {
         bool checkArmRaised();
         bool checkArmLowered();
         bool checkWeighingComplete();
+
+        void set(int pos);
         
         void raiseArm(bool needsToBeChecked) {raiseCmd = true; raiseNeedsToBeChecked = needsToBeChecked; }
         void lowerArm(bool needsToBeChecked) {lowerCmd = true; lowerNeedsToBeChecked = needsToBeChecked; }

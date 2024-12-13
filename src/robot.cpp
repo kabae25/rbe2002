@@ -55,7 +55,7 @@ void Robot::EnterSearchingBin()
 {
     robotState = SEARCHING_BIN;
     EnterNavIdle();
-    arm.lowerArm(false);
+    arm.EnterLowering();
     #ifdef __STATE_DEBUG_
         Serial.println("Entering Searching Bin State");
     #endif
@@ -84,6 +84,8 @@ void Robot::HandleCollectingBin()
         if (-tag.z < 4.5) {
           Serial.println("too close");
           EnterWeighingBin();
+          // 
+          arm.set(LOWERED_PWM); 
           // arm.raiseArm(true);
         }
         else { // go to the april tiag
@@ -117,11 +119,13 @@ void Robot::HandleWeighingBin()
     Serial.println((millis() / 1000) - alignTimerStartTime);
     if ((millis() / 1000) - alignTimerStartTime > 5) {
         chassis.SetWheelSpeeds(0, 0);
-        arm.raiseArm(true);
-        if(arm.checkWeighingComplete()) {
-            Serial.println("Weighing complete");
-            EnterDrivingToRamp();
-        }
+        // arm.EnterRaising();
+        arm.set(RAISED_PWM);
+        EnterDrivingToRamp();
+        // if(arm.checkWeighingComplete()) {
+        //     Serial.println("Weighing complete");
+        //     EnterDrivingToRamp();
+        // }
     } else {
       chassis.SetWheelSpeeds(-2.7, -2.7);
     }
@@ -205,7 +209,8 @@ void Robot::HandleDumpingBin()
     }
     if (spinning180 && (currDirection == 3)) {
       Serial.println("Done spinning");
-        arm.EnterLowering();
+        // arm.EnterLowering();
+        arm.set(LOWERED_PWM);
         chassis.SetTwist(0,0);
         EnterIdle();
     }
