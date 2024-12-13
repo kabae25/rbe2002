@@ -85,8 +85,8 @@ protected:
     int currTime = 0; // used in the NavPullUp class
     int targetTime = 0; // used in the NavPullUp class
 
-    int igoal = 0;
-    int jgoal = 0;
+    int igoal = 2;
+    int jgoal = 2;
 
     int icurr = 0;
     int jcurr = 0;

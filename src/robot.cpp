@@ -376,6 +376,7 @@ void Robot::HandleNavTurning(void) {
             }   
         else { // reached destination
             atTheGoalGridNode = true;
+            EnterSearchingBin();
         }
    }
 }
