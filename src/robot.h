@@ -145,6 +145,7 @@ private:
         INIT, // setup stuff
         IDLE, // wait for a goal bin from MQTT
         DRIVING_BIN, // Drive to the bin (using map)
+        SEARCHING_BIN, // search for the bin
         COLLECTING, // approach and collect the bin
         WEIGHING, // Weigh the bin
         DRIVING_RAMP, // drive to the ramp
@@ -163,6 +164,7 @@ public:
     void EnterDrivingToDump();
     void EnterDumpingBin();
     void EnterReturningHome();
+    void EnterSearchingBin();
 
 private:
     void HandleIdle();
@@ -173,7 +175,7 @@ private:
     void HandleDrivingDump();
     void HandleDumpingBin();
     void HandleReturningHome();
-
+    void HandleSearchingBin();
 protected:
     /* For managing IR remote key presses*/
     void HandleKeyCode(int16_t keyCode);

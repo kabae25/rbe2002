@@ -131,7 +131,7 @@ void Robot::HandleKeyCode(int16_t keyCode)
                 arm.lowerArm(false);
                 break;
             case NUM_3:
-              EnterCollectingBin();
+              EnterSearchingBin();
               break;
         }
     }

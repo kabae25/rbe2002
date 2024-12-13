@@ -52,13 +52,29 @@ void Robot::HandleLiningToBin()
     robotShouldBeMoving = true;
 }
 
+void Robot::EnterSearchingBin()
+{
+    robotState = SEARCHING_BIN;
+    arm.lowerArm(false);
+    #ifdef __STATE_DEBUG_
+        Serial.println("Entering Searching Bin State");
+    #endif
+}
+
 void Robot::EnterCollectingBin()
 {
-    arm.lowerArm(false);
     robotState = COLLECTING;
     #ifdef __STATE_DEBUG_
         Serial.println("Entering Collecting Bin State");
     #endif
+}
+
+void Robot::HandleSearchingBin() {
+  chassis.SetTwist(0, 0.9);
+  if(vision.FindAprilTags(tag)) {
+    chassis.Stop();
+    EnterCollectingBin();
+  }
 }
 
 void Robot::HandleCollectingBin()
@@ -71,20 +87,15 @@ void Robot::HandleCollectingBin()
         }
         else { // go to the april tiag
         Serial.println("Moving to apirltag");
-            float rot_error = 60 - tag.x; // center - x
-            float rot_Kp = 0.5;
-            float rot_effort = trust * (rot_Kp * rot_error);
+            float rot_error = tag.x; // center - x
+            float rot_Kp = 0.25;
+            float rot_effort = (rot_Kp * rot_error);
 
             float forward_error = 3 - (-tag.z);
-            float forward_Kp = 5;
+            float forward_Kp = 3;
             float forward_effort = (forward_Kp * forward_error);
-
-            chassis.SetTwist(forward_effort, -rot_effort);
+            chassis.SetTwist(forward_effort, rot_effort);
         }
-    }
-    else {
-      Serial.println("TURNING");
-      chassis.SetTwist(0, 0.15);
     }
 }
 
@@ -108,7 +119,7 @@ void Robot::HandleWeighingBin()
             EnterDrivingToRamp();
         }
     } else {
-      chassis.SetWheelSpeeds(-2.6, -2.6);
+      chassis.SetWheelSpeeds(-2.7, -2.7);
     }
 }
 
@@ -472,7 +483,9 @@ void Robot::RobotLoop(void)
             HandleIdle(); break;
         case DRIVING_BIN:
             HandleLiningToBin(); break;
-        case COLLECTING: // inclusive of the searching state
+        case SEARCHING_BIN:
+            HandleSearchingBin(); break;
+        case COLLECTING: 
             HandleCollectingBin(); break;
         case WEIGHING:
             HandleWeighingBin(); break;
