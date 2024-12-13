@@ -5,7 +5,7 @@
 
 class Chassis
 {
-protected:
+public:
     /**
      * Kinematic parameters default to the spec sheet from Pololu. You'll need to fine
      * tune them.
@@ -22,7 +22,6 @@ protected:
      */
     const uint16_t CONTROL_LOOP_PERIOD_MS = 20;
 
-protected:
     /**
      * loopFlag is used to tell the program when to update. It is set when Timer4
      * overflows (see InitializeMotorControlTimer). Some of the calculations are too
@@ -33,7 +32,6 @@ protected:
      */
     static uint8_t loopFlag;
 
-public:
     Chassis(void) {}
     void InititalizeChassis(void)
     {
@@ -49,13 +47,11 @@ public:
 
     static void Timer4OverflowISRHandler(void);
 
-public:
     void Stop(void) {SetMotorEfforts(0, 0);}
     void SetTwist(float fwdSpeed, float rotSpeed);
     void SetWheelSpeeds(float, float);
     void UpdateMotors(void);
 
-protected:
     /**
      * Initialization and Setup routines
      */
@@ -63,4 +59,5 @@ protected:
     void InitializeMotors(void);
     
     void SetMotorEfforts(int16_t, int16_t);
+    long getEncoder();
 };

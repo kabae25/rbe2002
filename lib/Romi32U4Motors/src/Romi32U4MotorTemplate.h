@@ -19,7 +19,7 @@
 
 class Romi32U4MotorBase
 {
-protected: 
+public: 
     // Used to control the motors in different ways
     enum CTRL_MODE : uint8_t {CTRL_DIRECT, CTRL_SPEED};
     volatile CTRL_MODE ctrlMode = CTRL_DIRECT;
@@ -200,7 +200,7 @@ public:
 template <uint8_t encXOR, uint8_t encB, uint8_t PWM, uint8_t DIR, uint8_t OCR> 
     class Romi32U4EncodedMotor : public Romi32U4MotorBase
 {
-protected:
+public:
 
     void InitializeMotor(void)
     {

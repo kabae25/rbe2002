@@ -1,5 +1,4 @@
 #include "LineSensor.h"
-#include "constants.h"
 
 
 // initialize the linesensors
@@ -65,17 +64,17 @@ bool LineSensor::CheckIntersection(void)
 {
     bool retVal = false;
 
-    bool isLeftLowerDark = analogRead(A11) > INTERSECTION_LOWER_THRESHOLD;
-    bool isLeftUpperDark = analogRead(A11) < INTERSECTION_UPPER_THRESHOLD;
-    bool isRightLowerDark = analogRead(A0) > INTERSECTION_LOWER_THRESHOLD;
-    bool isRightUpperDark = analogRead(A0) < INTERSECTION_UPPER_THRESHOLD;
+    //bool isLeftLowerDark = analogRead(A11) > INTERSECTION_LOWER_THRESHOLD;
+    //bool isLeftUpperDark = analogRead(A11) < INTERSECTION_UPPER_THRESHOLD;
+    //bool isRightLowerDark = analogRead(A0) > INTERSECTION_LOWER_THRESHOLD;
+    //bool isRightUpperDark = analogRead(A0) < INTERSECTION_UPPER_THRESHOLD;
 
     // // Calculate avg left and right weighted errors by taking each pin and multipling by some weight
     // int16_t left_error = ((color - analogRead(leftSensorPin1))*weight1 + (color - analogRead(leftSensorPin2))*weight2 + (color - analogRead(leftSensorPin3))*weight3);
     // int16_t right_error = ((color - analogRead(rightSensorPin1))*weight1 + (color - analogRead(rightSensorPin2))*weight2 + (color - analogRead(rightSensorPin3))*weight3);
 
-    bool isLeftBright = analogRead(LEFT_OUTER_SENSOR) > INTERSECTION_THRESHOLD;
-    bool isRightBright = analogRead(RIGHT_OUTER_SENSOR) > INTERSECTION_THRESHOLD;
+    bool isLeftBright = analogRead(LEFT_OUTER_SENSOR) > INTERSECTION_LOWER_THRESHOLD;
+    bool isRightBright = analogRead(RIGHT_OUTER_SENSOR) > INTERSECTION_UPPER_THRESHOLD;
 
     bool onIntersection = isLeftBright && isRightBright;
     if(onIntersection && !prevOnIntersection) retVal = true;

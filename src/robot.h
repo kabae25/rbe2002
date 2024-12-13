@@ -7,6 +7,7 @@
 #include <subsys/arm.h>
 #include <ZSC31014.h>
 #include <event_timer.h>
+#include "constants.h"
 
 #define LOAD_CELL_PIN 10
 class Robot
@@ -61,10 +62,21 @@ protected:
 
     bool looking = false;
 
+    long startingEncoderForMove = 0;
+    long endingEncoderForMove = 0;
+    bool retreatingFromBin = true;
+    bool turnToRamp = false;
+    bool gottenToEdge = false;
+    bool spinning180 = false;
+
     /**
      * Navigating Statemachine
      */
-    bool moving = false;
+
+    enum ORDER {I, J,};
+
+    bool robotShouldBeMoving = false;
+    bool atTheGoalGridNode = false;
     float baseSpeed = 0;
 
     float numTurns = 0; // Number of 90 degree turns to perform
@@ -103,7 +115,7 @@ protected:
     bool edgeDetected = false;
     bool completedLeg = false;
 
-    EventTimer alignTimer;
+    uint16_t alignTimerStartTime = 0;
 
 public:
     Robot(void) {keyString.reserve(8);} //reserve some memory to avoid reallocation
@@ -128,22 +140,22 @@ public:
         Serial.println(newMode);
     }
 private:
-        enum ROBOT_STATE {
-            INIT, // setup stuff
-            IDLE, // wait for a goal bin from MQTT
-            DRIVING_BIN, // Drive to the bin (using map)
-            COLLECTING, // approach and collect the bin
-            WEIGHING, // Weigh the bin
-            DRIVING_RAMP, // drive to the ramp
-            DRIVING_DUMP, // drive up the ramp
-            DUMPING, // dump the bin
-            RETURNING // return to the start position
-        };
-        ROBOT_STATE robotState = IDLE;
+    enum ROBOT_STATE {
+        INIT, // setup stuff
+        IDLE, // wait for a goal bin from MQTT
+        DRIVING_BIN, // Drive to the bin (using map)
+        COLLECTING, // approach and collect the bin
+        WEIGHING, // Weigh the bin
+        DRIVING_RAMP, // drive to the ramp
+        DRIVING_DUMP, // drive up the ramp
+        DUMPING, // dump the bin
+        RETURNING // return to the start position
+    };
+    ROBOT_STATE robotState = IDLE;
 public:
     void EnterInit();
     void EnterIdle();
-    void EnterDrivingToBin();
+    void EnterDrivingToBin(Tag goal_tag);
     void EnterCollectingBin();
     void EnterWeighingBin();
     void EnterDrivingToRamp();
@@ -153,7 +165,7 @@ public:
 
 private:
     void HandleIdle();
-    void HandleDrivingToBin();
+    void HandleLiningToBin();
     void HandleCollectingBin();
     void HandleWeighingBin();
     void HandleDrivingRamp();
@@ -169,7 +181,7 @@ protected:
      * KEEP THESE :) MIGHT BE USEFUL
      */
     void EnterNavTurning(int cardinal);
-    void EnterNavLining(int speed);
+    void EnterNavLining();
     void EnterNavPullup(int time);
     void EnterNavIdle(void);
 
@@ -179,7 +191,7 @@ protected:
     void HandleNavIdle(void);
 
     /* Navigating State Helper Methods */
-    int HelperNavCalculateDirection(void);
+    int HelperNavCalculateDirection(ORDER direction_to_go_first);
     void HelperLineFollowingUpdate(void);
 
     /* Mode changes */

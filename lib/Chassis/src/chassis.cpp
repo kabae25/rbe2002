@@ -21,6 +21,10 @@ void Chassis::Timer4OverflowISRHandler(void)
     rightMotor.speed = rightMotor.CalcEncoderDelta();
 }
 
+long Chassis::getEncoder(){
+    return leftMotor.encCount;
+}
+
 /**
  * Sets up a hardware timer on Timer4 to manage motor control on a precise schedule.
  * 

@@ -14,14 +14,10 @@ void Robot::InitializeRobot(void)
     vision.init();
     imuSubTimer.start(90);
 
-
-
     // Subsystems
     chassis.InititalizeChassis();
     arm.enterInit();
     EnterNavIdle();
-    
-    baseSpeed = 15;
 }
 
 void Robot::EnterInit()
@@ -40,20 +36,20 @@ void Robot::HandleIdle()
     // receive a begin state from mqtt
 }
 
-void Robot::EnterDrivingToBin()
+void Robot::EnterDrivingToBin(Tag goal_tag)
 {
+    igoal = goal_tag.x;
+    jgoal = goal_tag.y;
+    
     robotState = DRIVING_BIN;
     #ifdef __STATE_DEBUG_
         Serial.println("Entering Driving to Bin State");
     #endif
 }
 
-void Robot::HandleDrivingToBin()
+void Robot::HandleLiningToBin()
 {
-    moving = true;
-    // when we reach the goal pose, 
-        // go to the collecting state
-            // put the arm down
+    robotShouldBeMoving = true;
 }
 
 void Robot::EnterCollectingBin()
@@ -67,13 +63,15 @@ void Robot::EnterCollectingBin()
 
 void Robot::HandleCollectingBin()
 {
-    static bool closeEnough = false;
     if (vision.FindAprilTags(tag)) { // calculate the trust of the april tag reading
         if (-tag.z < 3.5) {
-            EnterWeighingBin();
+          Serial.println("too close");
+          EnterWeighingBin();
+          // arm.raiseArm(true);
         }
         else { // go to the april tiag
-            float rot_error = 0 - (tag.x); // center - x
+        Serial.println("Moving to apirltag");
+            float rot_error = 60 - tag.x; // center - x
             float rot_Kp = 0.5;
             float rot_effort = trust * (rot_Kp * rot_error);
 
@@ -85,18 +83,15 @@ void Robot::HandleCollectingBin()
         }
     }
     else {
-        chassis.SetTwist(0, 0.5);
+      Serial.println("TURNING");
+        chassis.SetTwist(0, 0.15);
     }
-
-    
-
 }
 
 void Robot::EnterWeighingBin()
 {
-    chassis.SetWheelSpeeds(1, 1);
-    alignTimer.start(400);
-
+    Serial.println("Entering Weighing Bin State");
+    alignTimerStartTime = millis() / 1000;
     robotState = WEIGHING;
     #ifdef __STATE_DEBUG_
         Serial.println("Entering Weighing State");
@@ -104,22 +99,23 @@ void Robot::EnterWeighingBin()
 }
 
 void Robot::HandleWeighingBin()
-{
-    if (alignTimer.checkExpired(false)) {
-
+{ 
+    Serial.println((millis() / 1000) - alignTimerStartTime);
+    if ((millis() / 1000) - alignTimerStartTime > 3) {
+        chassis.SetWheelSpeeds(0, 0);
+        arm.raiseArm(true);
         if(arm.checkWeighingComplete()) {
             EnterDrivingToRamp();
         }
+    } else {
+      chassis.SetWheelSpeeds(-2.6, -2.6);
     }
-
-
-
-    }
-
+}
 
 void Robot::EnterDrivingToRamp()
 {
     robotState = DRIVING_RAMP;
+    retreatingFromBin = true;
     #ifdef __STATE_DEBUG_
         Serial.println("Entering Driving to Ramp State");
     #endif
@@ -127,18 +123,31 @@ void Robot::EnterDrivingToRamp()
 
 void Robot::HandleDrivingRamp()
 {
-    
-    //if ((isInBounds(ekf.x, target_x - 5, target_x + 5)) &&
-    //    (isInBounds(ekf.y, target_y - 5, target_y + 5))) 
-    //{
-    //    EnterWaiting();
-    //    msg.sendMotorSpeed(0,0);
-    //}
+    if (retreatingFromBin){
+        if (startingEncoderForMove > chassis.getEncoder()){
+                chassis.SetTwist(5, 0);
+            }
+            else {
+                retreatingFromBin = false;
+                turnToRamp = true;
+                chassis.SetTwist(0, -0.3);
+            }
+    }
+    else {
+        if (turnToRamp){
+            if (fabs(eulerAngles.z - 90) < 1 ){
+                EnterDrivingToDump();
+            }
+        }
+    }
 }
+
+
 
 void Robot::EnterDrivingToDump()
 {
     robotState = DRIVING_DUMP;
+    EnterNavLining();
     #ifdef __STATE_DEBUG_
         Serial.println("Entering Driving up Ramp to Dump State");
     #endif
@@ -146,15 +155,21 @@ void Robot::EnterDrivingToDump()
 
 void Robot::HandleDrivingDump()
 {
-    //traj following to point ramp to dump
-    // once at pose, go to dumping state
-        // lower arm
+    if (ramping && !prevRamping){
+        prevRamping = true;
+    }
+    else if (!ramping && prevRamping){
+        prevRamping = false;
+        EnterNavIdle();
+        EnterDumpingBin();
+    }
 }
 
 void Robot::EnterDumpingBin()
 {
     
     robotState = DUMPING;
+    chassis.SetTwist(5, 0);
     #ifdef __STATE_DEBUG_
         Serial.println("Entering dumping bin State");
     #endif
@@ -162,7 +177,20 @@ void Robot::EnterDumpingBin()
 
 void Robot::HandleDumpingBin()
 {
-    arm.lowerArm(false);
+    if (lineSensor.CheckEdge() && !gottenToEdge) {
+        startingEncoderForMove = chassis.getEncoder();
+        gottenToEdge = true;
+        chassis.SetTwist(-2, 0);
+    }
+    if (gottenToEdge && ((startingEncoderForMove - 5 * chassis.LEFT_CM_S_TO_TICKS_INT) > chassis.getEncoder())) {
+        spinning180 = true;
+        chassis.SetTwist(0, 0.5);
+    }
+    if (spinning180 && (fabs(eulerAngles.z - (-90)) < 5)) {
+        arm.EnterLowering();
+        chassis.SetTwist(0,0);
+        EnterIdle();
+    }
     // once arm is lowered
     // go to returning home state
 }
@@ -177,9 +205,6 @@ void Robot::EnterReturningHome()
 
 void Robot::HandleReturningHome()
 {
-    // return home
-
-    // once at home:
     EnterIdle();
 }
 
@@ -272,42 +297,30 @@ void Robot::utilUpdatePitchIndication(void) {
         ramping = false;
         digitalWrite(13, LOW);
     }
-
-    /*
-    if ((eulerAngles.y > 10.0) && (ramping == false)) {
-        ramping = true;
-        digitalWrite(13, HIGH);
-    }
-    else if ((eulerAngles.y < 10.0) && (ramping == true)) {
-        ramping = false;
-        atPlatform = false;
-        digitalWrite(13, LOW);
-    }
-    */
 }
 
-/**
- * TITLE: Methods relating to the navigating state machine
- */
-// Nav: TURNING state transition
 void Robot::EnterNavTurning(int cardinal) {
+    atTheGoalGridNode = true;
+    robotShouldBeMoving = true;
     goalDirection = cardinal; // cardinal is the desired direction
     numTurns = goalDirection - currDirection;
+    
     navigatingState = NAVIGATING_TURNING;
     Serial.println("Entering NAVIGATING: TURNING");
 }
 
 // Nav: LINING state transition
-void Robot::EnterNavLining(int speed) {
-    baseSpeed = speed;
-
+void Robot::EnterNavLining() {
+    robotShouldBeMoving = true;
     navigatingState = NAVIGATING_LINING;
     Serial.println("Entering NAVIGATING: LINING");
 }
 
 // Nav: PULLUP state transition
 void Robot::EnterNavPullup(int time) {
+    robotShouldBeMoving = true;
     targetTime = time;
+
     navigatingState = NAVIGATING_PULLUP;
     Serial.println("Entering NAVIGATING: PULLUP");
 }
@@ -315,47 +328,54 @@ void Robot::EnterNavPullup(int time) {
 // Nav: IDLE state transition
 void Robot::EnterNavIdle(void) {
     chassis.Stop();
+    robotShouldBeMoving = false;    
+    
     navigatingState = NAVIGATING_IDLE;
     Serial.println("Entering NAVIGATING: IDLE");
 }
 
 // This state can decide what direction to turn based on some destination and current coordinates on the manhatten grid
 void Robot::HandleNavTurning(void) {
-   if(!looking) {
-     if (currDirection != goalDirection) {
-        if (numTurns > 0) {
-            if (numTurns > 2) {chassis.SetTwist(0, -2);} 
-            else {chassis.SetTwist(0, 2);}
-        }
-        else {
-            if (numTurns < -2) {chassis.SetTwist(0, 2);} 
-            else {chassis.SetTwist(0, -2);}
-        }
-    }
-    else if (igoal != icurr || jgoal != jcurr) {
-        if(edgeDetected) {
-            arm.lowerArm(true);
-            if (arm.checkArmRaised()) {
-                /** Go back down ramp and some arbitrary grid location */
-                jgoal = 1;
-                igoal = 1;
-                EnterNavLining(baseSpeed);
+    if(!looking) {
+        if (currDirection != goalDirection) {
+            if (numTurns > 0) {
+                if (numTurns > 2) {chassis.SetTwist(0, -2);} 
+                else {chassis.SetTwist(0, 2);}
             }
-        } else {
-            EnterNavLining(baseSpeed);
+            else {
+                if (numTurns < -2) {chassis.SetTwist(0, 2);} 
+                else {chassis.SetTwist(0, -2);}
+            }
         }
-    }
-    else { // reached destination
-        navLeg++;
-        EnterNavIdle();
-    }
+            else if (igoal != icurr || jgoal != jcurr) {
+                if(edgeDetected) {
+                    arm.lowerArm(true);
+                    if (arm.checkArmRaised()) {
+                        /** Go back down ramp and some arbitrary grid location */
+                        jgoal = 1;
+                        igoal = 1;
+                        EnterNavLining();
+                    }
+                } else {
+                    EnterNavLining();
+                }
+            }   
+        else { // reached destination
+            atTheGoalGridNode = true;
+        }
    }
 }
 
 // Nav: handle LINING state
 void Robot::HandleNavLining(void) {
     if ((!lineSensor.CheckIntersection())) { // || ((prevRamping == false) && (ramping == true))
-        // line following is handled sychronously in the robotLoop method
+
+        float lineError = lineSensor.CalcError();
+        float lineErrorDerivative = lineError - prevLineError;
+        float turnEffort = LINE_FOLLOWER_KP * lineError + LINE_FOLLOWER_KD * lineErrorDerivative;
+        
+        chassis.SetTwist(LINE_FOLLOW_LINEAR_SPEED, -turnEffort);
+        prevLineError = lineError;   
     }
     else if (atPlatform) {
         currTime = millis();
@@ -395,51 +415,15 @@ void Robot::HandleNavPullup(void) {
 
 // Nav: handle IDLE state
 void Robot::HandleNavIdle(void) {
-    // For just going up the ramp and stopping
-    if (!andBack) {
-        //igoal = -2;
-        //jgoal = 0;
-    }
     
-    if (andBack) { // swap variables if the andBack flag was raised
-        istarting = igoal;
-        jstarting = jgoal;
-        igoal = 0;
-        jgoal = 0;
-        EnterNavTurning(HelperNavCalculateDirection());
-    }
-    
-    // possible do someting here...
 }
 
 // Calculate what heading to face in order to get to the goal destination
-int Robot::HelperNavCalculateDirection(void) {
+int Robot::HelperNavCalculateDirection(ORDER direction_to_go_first) {
     int retVal = 0;
 
-    // first see if a direction change is necessary
-    // then decide what order to check i or j
-    enum ORDER {I, J,};
-    ORDER order = I;
-    
-    if (!andBack) { // normally do i then j
-        if (icurr != igoal) {
-            order = I;
-        }
-        else if (jcurr != jgoal) {
-            order = J;
-        }
-    }
-    else { // on the way back, do j then i
-        if (jcurr != jgoal) {
-            order = J;
-        }
-        if (icurr != igoal) {
-            order = I;
-        }
-    }
-
     // then calculate the direction necessary to face
-    switch (order) {
+    switch (direction_to_go_first) {
         case (I):
             if ((igoal - icurr) > 0) retVal = 0; // if positive go east
             else if ((igoal - icurr) < 0)  retVal = 2; // if negative go west
@@ -459,179 +443,32 @@ void Robot::HelperLineFollowingUpdate(void) {
     chassis.SetTwist(baseSpeed, effort);
 }
 
-
-// // PLEASE REMOVE - REDUNDANT & BLOAT 
-// void Robot::EnterManSearching(void) {
-//     chassis.SetTwist(0, 1);
-//     manipulatingState = MANIPULATING_SEARCHING;
-//     Serial.println("Entering MANIPULATING: Searching");
-// }
-// // PLEASE REMOVE - REDUNDANT & BLOAT 
-
-// void Robot::EnterManApproaching(void) {
-//     chassis.Stop();
-
-//     arm.lowerArm(false);
-
-//     timestamp = (millis() + remembrance);
-//     manipulatingState = MANIPULATING_APPROACHING;
-//     Serial.println("Entering MANIPULATING: Approaching");
-
-// }
-// // PLEASE REMOVE - REDUNDANT & BLOAT 
-
-// void Robot::EnterManLifting(void) {
-//     arm.raiseArm(false);
-
-//     manipulatingState = MANIPULATING_LIFTING;
-//     Serial.println("Entering MANIPULATING: Lifting");
-
-// }
-// // PLEASE REMOVE - REDUNDANT & BLOAT 
-
-// void Robot::EnterManWeighing(void) {
-//     weightTimer.start(20);
-//     manipulatingState = MANIPULATING_WEIGHING;
-//     Serial.println("Entering MANIPULATING: Weighing");
-
-// }
-// // PLEASE REMOVE - REDUNDANT & BLOAT 
-
-// void Robot::HandleManIdle(void) {
-    
-// }
-// // PLEASE REMOVE - REDUNDANT & BLOAT 
-
-// void Robot::HandleManSearching(void) {
-//     looking = true;
-//     if (vision.FindAprilTags(tag)) {
-//         EnterManApproaching();
-//     }
-//     chassis.SetTwist(0, 0.5);
-
-// }
-
-// // PLEASE REMOVE - REDUNDANT & BLOAT 
-
-// void Robot::HandleManApproaching(void) {
-
-//     // calculate the trust of the april tag reading
-//     if (vision.FindAprilTags(tag)) {
-//         trust = 1;
-//         timestamp = (millis() + remembrance);
-//     }
-//     else {
-//         trust = (timestamp - millis()) / remembrance;
-//         if (trust <= 0) {
-//             EnterManSearching();
-//         }
-//     }
-
-//     plot("Trust", trust);
-//     plot("tag x", tag.x);
-//     plot("tag.z", -tag.z);
-
-//     float rot_error = 0 - (tag.x); // center - x
-//     float rot_Kp = 0.5;
-//     float rot_effort = trust * (rot_Kp * rot_error);
-
-//     float forward_error = 3 - (-tag.z);
-//     float forward_Kp = 5;
-//     float forward_effort = trust * (forward_Kp * forward_error);
-
-//     chassis.SetTwist(forward_effort, -rot_effort);
-
-//     Serial.println(tag.z);
-
-//     if (HelperCheckApproachComplete(3.5, -tag.z)) {
-//         looking = false;
-//         EnterManLifting();
-//     }
-// }
-// // PLEASE REMOVE - REDUNDANT & BLOAT 
-
-// void Robot::HandleManLifting(void) {
-//     if (arm.checkArmRaised()) {
-//         EnterManWeighing();
-//     }
-// }
-// // PLEASE REMOVE - REDUNDANT & BLOAT 
-
-// void Robot::HandleManWeighing(void) {
-//     if (weightTimer.checkExpired(true)) {
-//         unsigned int sample = digitalRead(LOAD_CELL_PIN);
-//         mass = mass*0.8 + (1-0.8)*((sample - 310.86)/1.2548);
-        
-//         if (weight_count > 50) {
-//             Serial.print("Mass: ");
-//             Serial.print(mass);
-//             weight_count = 0;
-//             EnterManIdle();
-//         }
-//         else {
-//             weight_count++;
-//         }
-//     }
-// }
-
-// bool Robot::HelperCheckApproachComplete(int headingTolerance, int distanceTolerance) {
-
-//     if (distanceTolerance <= headingTolerance) {
-//         return true;
-//     }
-//     else return false;
-// }
-
-
-
-
 void Robot::RobotLoop(void) 
 {
-    /**
-     * The main loop for your robot. Process both synchronous events (motor control),
-     * and asynchronous events (IR presses, distance readings, etc.).
-    */
-
-    /**
-     * Handle any IR remote keypresses.
-     */
     int16_t keyCode = decoder.getKeyCode();
     if(keyCode != -1) HandleKeyCode(keyCode);
 
-    /**
-     * Check the Chassis timer, which is used for executing motor control
-     */
     if(chassis.CheckChassisTimer())
     {
-        // add synchronous, pre-motor-update actions here
-        if(navigatingState == NAVIGATING_LINING)
-        {
-            float followKp = 0.0055;
-            float followKd = 0.0007;
+        chassis.UpdateMotors(); // make da motors move
 
-            float lineError = lineSensor.CalcError();
-            float lineErrorDerivative = lineError - prevLineError;
-
-            float turnEffort = followKp * lineError + followKd * lineErrorDerivative;
-
-            chassis.SetTwist(baseSpeed, -turnEffort);
-            prevLineError = lineError;    
-            //HelperLineFollowingUpdate();
+        if (robotShouldBeMoving) { //ONLY USE WHEN IN A LINE FOLLOWING STATE
+            switch (navigatingState) { 
+                case (NAVIGATING_TURNING): 
+                    HandleNavTurning(); break;
+                case (NAVIGATING_LINING): 
+                    HandleNavLining(); break;
+                case (NAVIGATING_PULLUP) :
+                    HandleNavPullup(); break;
+            }
         }
-
-        chassis.UpdateMotors();
-
-        // add synchronous, post-motor-update actions here
     }
 
-    /**
-     * TITLE: Robot State handler calls
-     */
     switch (robotState) {
         case (IDLE):
             HandleIdle(); break;
         case DRIVING_BIN:
-            HandleDrivingToBin(); break;
+            HandleLiningToBin(); break;
         case COLLECTING: // inclusive of the searching state
             HandleCollectingBin(); break;
         case WEIGHING:
@@ -645,31 +482,14 @@ void Robot::RobotLoop(void)
         case RETURNING:
             HandleReturningHome(); break;
     }
-    if (moving) {
-            switch (navigatingState) { //ONLY USE WHEN IN A LINE FOLLOWING STATE
-        case (NAVIGATING_IDLE): 
-            HandleNavIdle(); break;
-        case (NAVIGATING_TURNING): 
-            HandleNavTurning(); break;
-        case (NAVIGATING_LINING): 
-            HandleNavLining(); break;
-        case (NAVIGATING_PULLUP) :
-            HandleNavPullup(); break;
-        }
-    }
-
-
-    /**
-     * Check for an IMU update
-     */
-
+    
     if(imu.checkForNewData())
     {
         HandleOrientationUpdate();
     }
 
+    // misc
     lineSensor.CalcError();
     esp32.listenUART();
     arm.update();
 }
-

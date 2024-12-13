@@ -1,7 +1,24 @@
 #pragma once
-
 #include <Arduino.h>
-#include "constants.h"
+
+// constants file doesn't work in lib directory
+#define LEFT_INNER_SENSOR A6
+#define RIGHT_INNER_SENSOR A4
+#define LEFT_OUTER_SENSOR A11
+#define RIGHT_OUTER_SENSOR A0
+
+#define EXPO 0.9
+
+#define BRIGHT_THRESHOLD 1200
+#define EDGE_THRESHOLD 900
+#define INTERSECTION_LOWER_THRESHOLD 600
+#define INTERSECTION_UPPER_THRESHOLD 900
+#define EDGE_THRESHOLD 1000
+
+#define LINE_FOLLOWER_KP 0.0055
+#define LINE_FOLLOWER_KD 0.0007
+
+#define LINE_FOLLOW_LINEAR_SPEED 20
 
 class LineSensor
 {

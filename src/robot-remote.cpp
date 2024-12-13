@@ -66,10 +66,7 @@ void Robot::HandleKeyCode(int16_t keyCode)
                 baseSpeed = keyString.toInt();
                 keyString = "";
                 break;
-            
             case STOP_MODE:
-                //robotState = ROBOT_MANIPULATING;
-                EnterManSearching();
                 break;
             case NUM_1:
                 arm.raiseArm(false);  

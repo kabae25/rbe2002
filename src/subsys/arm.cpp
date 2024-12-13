@@ -89,7 +89,6 @@ void Arm::HandleLowering()
 
 void Arm::EnterWeighing()
 {
-    isWeighing = true;
     weightTimer.start(50);
     state = WEIGHING;
     weightSum = 0;
